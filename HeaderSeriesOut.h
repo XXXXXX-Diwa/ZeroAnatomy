@@ -2,6 +2,8 @@
 #define HEADERSERIESOUT_H
 
 #include "main.h"
+#include "DataException.h"
+
 
 struct HeaderInfo{
     uint8_t tileSet;
@@ -36,23 +38,7 @@ struct HeaderInfo{
     uint16_t musicTrackNumber;
 };
 
-struct RelBgData{
-    uint8_t roomWidth;
-    uint8_t roomHeigh;
-    uint8_t relCompressedData[]
-};
 
-struct Lz77BgData{
-    uint32_t bgSize; //0 = 256x256, 1 = 512x256, 2 = 256x512 只用了一字节
-    uint32_t decompressedLen;   //用了三字节
-    uint8_t lz77CompressedTileTable[];
-};
-
-struct SpriteData{  //最多24个 结尾FFFFFF
-    uint8_t ypos;
-    uint8_t xpos;
-    uint8_t data;   //Bits 0-3 = Sprite set number + 1 Bits 4-7 = Property
-};
 
 class HeaderSeriesOut{
     public:
@@ -65,8 +51,15 @@ class HeaderSeriesOut{
     vector<DataListPrint>headSeriesDLP;  //记录每个数据的位置和长度,以便最终打印
 
     HeaderSeriesOut(string name,string path);
+    void MakeHeaderSeriesFolders();
     ~HeaderSeriesOut();
-    static string areaName(uint32_t arean);
+    static string areaName(uint8_t arean);
+    static string numToHexStr(const uint32_t Num, const uint8_t width);
+    static string compressType(uint8_t property);
+    static uint8_t dataOutType(uint8_t property);
+    static string dataType(uint8_t type);
+    static string bgDataDescription(const uint8_t type,const uint8_t property);
+
     void HeadAllDataOut();
 };
 #endif  //HEADERSERIESOUT_H

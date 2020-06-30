@@ -5,11 +5,12 @@
 #include <iomanip>
 #include <algorithm>
 #include <memory>
-#include <sstream>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <io.h>
-#include "StructSet.h"
+#include <map>
+#include "DataException.h"
 
 using namespace std;
 
@@ -26,12 +27,9 @@ class File{
     string FileName;    //仅文件名
     vector<DataListPrint> allPrint;
 
-    static void FileFail(string &fileName);
-    static void AuthorInfo();
     static void makefolder(string s);
     File(string s);
     void MakeMainAsmFile();
-    void MakeAllFolder();
     ~File();
 };
 

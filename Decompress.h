@@ -1,5 +1,6 @@
-#ifndef STRUCTSET_H_INCLUDED
-#define STRUCTSET_H_INCLUDED
+#ifndef DECOMPRESS_H_INCLUDED
+#define DECOMPRESS_H_INCLUDED
+
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -25,11 +26,17 @@ public:
     void getLz77CompressData(ifstream &inf);
 };
 
-struct SpriteData{  //最多24个 结尾FFFFFF 无需对齐 无效的也指向数据FFFFFF
-    uint8_t ypos;
-    uint8_t xpos;
-    uint8_t data;   //Bits 0-3 = Sprite set number + 1 Bits 4-7 = Property
-}spdDat[25];
+class SpriteData{  //最多24个 结尾FFFFFF 无需对齐 无效的也指向数据FFFFFF
+public:
+    uint8_t data[75];
+    uint8_t length;
+    SpriteData();
+    ~SpriteData();
+    void getSpriteData(ifstream &inf);
+//    uint8_t ypos;
+//    uint8_t xpos;
+//    uint8_t data;   //Bits 0-3 = Sprite set number + 1 Bits 4-7 = Property
+};
 
 
-#endif // STRUCTSET_H_INCLUDED
+#endif // DECOMPRESS_H_INCLUDED
