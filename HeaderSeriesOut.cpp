@@ -166,7 +166,7 @@ void HeaderSeriesOut::HeadAllDataOut(){
     for(int i=0;i<4;++i){
         ouf<<".org 0x" <<hex<<setiosflags(ios::uppercase)
         <<(ldrAreaHeaderOffset[i]^0x8000000)<<endl;
-        ouf<<"\t.word allAreaHeaderOffsets\t\t\t;"<<hex
+        ouf<<"\t.word AreaHeaderOffsetTable\t\t\t;"<<hex
         <<setiosflags(ios::uppercase)<<allAreaHeaderOffsets<<endl;
     }
     ouf.close();
@@ -177,23 +177,28 @@ void HeaderSeriesOut::HeadAllDataOut(){
     if(ouf.fail()){
         DataException::FileError(tes,0);
     }
-//    tes=HeaderPath+"HeadPointerDef.asm";
-//    ofstream odef(tes,ios::out);
-//    if(odef.fail()){
-//        DataException::FileError(tes,0);
-//    }
+    //打印头数据的链接和样本载入文件
+    ouf<<".align\n"
+    <<"AreaHeaderOffsetTable:\n"
+    <<"\t.word Brinstar_HeaderData\n"
+    <<"\t.word Kraid_HeaderData\n"
+    <<"\t.word Norfair_HeaderData\n"
+    <<"\t.word Ridley_HeaderData\n"
+    <<"\t.word Tourian_HeaderData\n"
+    <<"\t.word Crateria_HeaderData\n"
+    <<"\t.word Chozodia_HeaderData\n"
+    <<".align\n"
+    <<".include \"HeaderSeries\\HeadPointerDef.asm\"\n"
+    <<".align"<<endl;
     //header数据循环遍历
     map<string,uint32_t>desToOft;  //描述->地址
     map<uint32_t,uint8_t>oftToType;//地址->压缩类型(0:rel,1:lz77,2:spritedata);
     map<uint32_t,uint32_t>oftToLen;//地址->长度 不用去重就去重了
     for(uint32_t i=0;i<headInfo.size();++i){
-//        tes=HeaderPath+areaName(i);
-//        File::makefolder(tes);//创建每个区数据文件夹
         uint8_t teu8[4];//临时接受数
         uint32_t teoft[5];//临时接受地址
         string testr[5];//临时接受字符串
-        ouf<<"\t;"<<areaName(i)<<"_HeaderData"<<endl;
-//        odef<<"\t;"<<areaName(i)<<"_DefineLabel"<<endl;
+        ouf<<areaName(i)<<"_HeaderData:"<<endl;
         for(uint32_t j=0;j<headInfo[i].size();++j){
             //当前区名+房间号
             tes=areaName(i)+HeaderSeriesOut::numToHexStr(j,2);
@@ -308,16 +313,17 @@ void HeaderSeriesOut::HeadAllDataOut(){
     unique_ptr<RelBgData>rbd(new RelBgData());
     unique_ptr<Lz77BgData>lbd(new Lz77BgData());
     unique_ptr<SpriteData>spd(new SpriteData());
+    uint32_t teoft;
     for(it=oftToType.begin();it!=oftToType.end();++it){
         switch(it->second){
         case 0:
-            tes=HeaderPath+"RelData\\"+HeaderSeriesOut::numToHexStr(it->first,7)+".rel";
+            tes=HeaderPath+"RelData\\"+numToHexStr(it->first,7)+".rel";
             break;
         case 1:
-            tes=HeaderPath+"Lz77Data\\"+HeaderSeriesOut::numToHexStr(it->first,7)+".lz7";
+            tes=HeaderPath+"Lz77Data\\"+numToHexStr(it->first,7)+".lz7";
             break;
         case 2:
-            tes=HeaderPath+"SpriteData\\"+HeaderSeriesOut::numToHexStr(it->first,7)+".spd";
+            tes=HeaderPath+"SpriteData\\"+numToHexStr(it->first,7)+".spd";
             break;
         default:
             DataException::DataError("压缩类型参数错误!");
@@ -333,21 +339,54 @@ void HeaderSeriesOut::HeadAllDataOut(){
             ouf.put((char)rbd->roomWidth);
             ouf.put((char)rbd->roomHeigh);
             ouf.write((char*)rbd->relCompressedData,rbd->length);
+            teoft=rbd->length;
             break;
         case 1:
             lbd->getLz77CompressData(inf);
             ouf.write((char*)&lbd->bgSize,4);
             ouf.write((char*)&lbd->decompressedLen,4);
             ouf.write((char*)lbd->lz77CompressedTileTable,lbd->length);
+            teoft=lbd->length;
             break;
         default:
             spd->getSpriteData(inf);
             ouf.write((char*)spd->data,spd->length);
+            teoft=spd->length;
         }
+        oftToLen[it->first]=teoft;      //记录每个数据的长度
         ouf.close();
     }
     rbd.reset();
     lbd.reset();
-    spd.reset();
+    spd.reset();    //指针over
+    //创建头数据坐标数据定义文件
+    tes=HeaderPath+"HeadPointerDef.asm";
+    ouf.open(tes,ios::out);
+    if(ouf.fail()){
+        DataException::FileError(tes,0);
+    }
+    DataListPrint tedlp;//临时记录清单
+    string lz7Path="\t.import \"HeaderSeries\\Lz77Data\\";
+    string relPath="\t.import \"HeaderSeries\\RelData\\";
+    string spdPath="\t.import \"HeaderSeries\\SpriteData\\";
+    map<string,uint32_t>::iterator def;
+    for(def=desToOft.begin();def!=desToOft.end();++def){
+        tedlp.explain=def->first;
+        tedlp.offset=def->second;
+        tedlp.len=oftToLen[tedlp.offset];
+        switch(oftToType[tedlp.offset]){ //根据数据地址查看类型
+        case 0:
+            tes=relPath+numToHexStr(tedlp.offset,7)+".rel\"";
+            break;
+        case 1:
+            ouf<<".align\n";
+            tes=lz7Path+numToHexStr(tedlp.offset,7)+".lz7\"";
+            break;
+        case 2:
+            tes=spdPath+numToHexStr(tedlp.offset,7)+".spd\"";
+        }
+        ouf<<def->first<<":\n"<<tes<<endl;
+        headSeriesDLP.push_back(tedlp); //清单加入
+    }
 }
 

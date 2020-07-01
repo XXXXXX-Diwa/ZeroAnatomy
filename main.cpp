@@ -36,13 +36,23 @@ void File::MakeMainAsmFile(){
     if(mf.fail()){
         DataException::FileError(tes,0);
     }
+    //方便测试(临时首)
+    mf<<".gba"<<endl;
+    mf<<".open \"zm.gba\",\"ts.gba\",0x8000000"<<endl;
+
 
     mf<<".definelabel ZeroAnatomyFreeDataOffset,0x8770000\n"<<endl;
     //占用部分
-    mf<<".include HeaderSeries\\HeadGerenalData.asm"<<endl;
+    mf<<".include \"HeaderSeries\\HeadGerenalData.asm\"\n"<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
-    mf<<".include HeaderSeries\\HeadCustomData.asm"<<endl;
+    mf<<".include \"HeaderSeries\\HeadCustomData.asm\""<<endl;
+
+
+    //方便测试(临时尾)
+    mf<<".close"<<endl;
+
+
     mf.close();
 }
 

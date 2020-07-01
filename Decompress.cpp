@@ -20,30 +20,29 @@ RelBgData::~RelBgData(){
 *第二字节首次遇到00那么下一个字节就是新首字节,会根据此字节切换单双
 
 **/
-void RelBgData:: getRelCompressData(ifstream &inf){
-    RelBgData::roomWidth=inf.get();
-    RelBgData::roomHeigh=inf.get();
-    RelBgData::length=RelBgData::roomHeigh*RelBgData::roomWidth;
-    inf.read((char*)RelBgData::relCompressedData,
-             RelBgData::length);
-    RelBgData::length<<=1;//乘以2
+void RelBgData::getRelCompressData(ifstream &inf){
+    roomWidth=inf.get();
+    roomHeigh=inf.get();
+    length=roomHeigh*roomWidth;
+    length<<=1;//乘以2
+    inf.read((char*)relCompressedData,length);
     bool swibit=false;
     uint8_t ut8,bit8,byte1;
-    uint8_t *relDat=RelBgData::relCompressedData;//方便使用
     uint16_t bit16;
     uint32_t total=0,len=0;//一个记录解压累计长度一个记录读取的坐标
-    ut8=relDat[len];
-    while(total<=RelBgData::length){
+    ut8=relCompressedData[len];
+    while(true){//total<length){
         if(ut8==1){
             ++len;
-            bit8=relDat[len];
+            bit8=relCompressedData[len];
             if(bit8==0){
                 if(swibit){
+
                     break;
                 }
                 swibit=true;
                 ++len;
-                ut8=relDat[len];//此处可能转为2bit类型,只要该值不为1
+                ut8=relCompressedData[len];//此处可能转为2bit类型,只要该值不为1
 					//2bit类型的第二字节和第三字节同时为0才会结束,故结尾为00 00
 					//但若维持1bit类型,则第二个字节再次为0就会结束
             }else if((bit8&0x80)==0){
@@ -59,18 +58,23 @@ void RelBgData:: getRelCompressData(ifstream &inf){
             }
         }else{
             ++len;
-            bit8=relDat[len];
+            bit8=relCompressedData[len];
             ++len;
-            byte1=relDat[len];
-            bit16=(bit8<<8)|byte1;
+            byte1=relCompressedData[len];
+            bit16=bit8;
+            bit16<<=8;
+            bit16|=byte1;
             if(bit16==0){
                 if(swibit){
                     break;
                 }
+
                 swibit=true;
+                ++len;
+                ut8=relCompressedData[len];
             }else if((bit16&0x8000)==0){
                 total+=bit16;
-                len+=16;
+                len+=bit16;
             }else{
                 bit16^=0x8000;
                 if(bit16==0){
@@ -81,7 +85,12 @@ void RelBgData:: getRelCompressData(ifstream &inf){
             }
         }
     }
-    RelBgData::length=len;
+    if(length!=total){
+        cout<<"布林斯坦房间6的未使用的bg3数据是唯一的错误数据,数据地址:365038"<<endl;
+        cout<<"因为只有这一个错误的数据,所以不想检查全部的无效数据了(降低效率)"<<endl;
+    }
+
+    length=len+1;
 }
 
 
@@ -118,24 +127,22 @@ Lz77BgData::~Lz77BgData(){
 void Lz77BgData::getLz77CompressData(ifstream &inf){
     inf.read((char*)&bgSize,4);
     inf.read((char*)&decompressedLen,4);
-    inf.read((char*)Lz77BgData::lz77CompressedTileTable,
-             Lz77BgData::decompressedLen>>8);
+    inf.read((char*)lz77CompressedTileTable,decompressedLen>>8);
     uint16_t bit16;
-    uint32_t definelen=Lz77BgData::decompressedLen>>8;//数据总长度
+    uint32_t definelen=decompressedLen>>8;//标注的解压总长度
     uint32_t total=0,len=0;//解压累计长度和当前读取位置
     uint8_t bit8,byte1,ut8;
-    uint8_t *lzDat=Lz77BgData::lz77CompressedTileTable;//方便使用
-    while(total<=definelen){
-        bit8=lzDat[len];    //第一个字节
+    while(total<definelen){
+        bit8=lz77CompressedTileTable[len];    //第一个字节
         ++len;
         int i=8;
         while((--i)>=0){
             if((bit8&0x80)==0){
-                byte1=lzDat[len];
+                byte1=lz77CompressedTileTable[len];
                 ++len;
                 ++total;
             }else{
-                ut8=lzDat[len];
+                ut8=lz77CompressedTileTable[len];
                 ++len;
                 byte1=ut8;
                 ut8>>=4;
@@ -143,7 +150,7 @@ void Lz77BgData::getLz77CompressData(ifstream &inf){
                 byte1&=0xF;
                 bit16=byte1;
                 bit16<<=8;
-                byte1=lzDat[len];
+                byte1=lz77CompressedTileTable[len];
                 ++len;
                 bit16|=byte1;
                 total+=ut8;
@@ -154,17 +161,16 @@ void Lz77BgData::getLz77CompressData(ifstream &inf){
             }
         }
     }
-    Lz77BgData::length=len;
+    length=len;
 }
 
 SpriteData::SpriteData(){}
 SpriteData::~SpriteData(){}
 void SpriteData::getSpriteData(ifstream &inf){
-    inf.read((char*)SpriteData::data,75);
-    uint8_t *data=SpriteData::data;//方便使用
+    inf.read((char*)data,75);
     for(uint8_t i=0;i<75;i+=3){
         if(data[i]==0xFF&&data[i+1]==0xFF&&data[i+2]==0xFF){
-            SpriteData::length=i+3;
+            length=i+3;
             break;
         }
     }
