@@ -5,7 +5,8 @@
 *Header数据分为7个区域,每个区域的每个房间都有一个Header数据60字节长
 *每个房间有3层BG和一个实体数据要打印,3个精灵设置数据要打印(都不定长)
 **/
-HeaderSeriesOut::HeaderSeriesOut(string name,string path):readRomRoute(name),HeaderPath(path){
+HeaderSeriesOut::HeaderSeriesOut(string name,string path)
+                    :readRomRoute(name),HeaderPath(path){
     ifstream inf(readRomRoute,ios::in|ios::binary);
     if(inf.fail()){
         DataException::FileError(readRomRoute,1);
@@ -14,7 +15,7 @@ HeaderSeriesOut::HeaderSeriesOut(string name,string path):readRomRoute(name),Hea
     inf.seekg(ldrAreaHeaderOffset[0],ios::beg);
     inf.read((char*)&bit32,4);
     if(bit32>>25!=4){
-        DataException::DataError("错误的ROM,地址异常!");
+        DataException::DataError("错误的ROM,Header指针异常!");
     }
     for(int i=1;i<4;++i){
         inf.seekg(ldrAreaHeaderOffset[i],ios::beg);
@@ -342,7 +343,7 @@ void HeaderSeriesOut::HeadAllDataOut(){
             teoft=rbd->length;
             break;
         case 1:
-            lbd->getLz77CompressData(inf);
+            lbd->getLz77CompressData(inf,false);
             ouf.write((char*)&lbd->bgSize,4);
             ouf.write((char*)&lbd->decompressedLen,4);
             ouf.write((char*)lbd->lz77CompressedTileTable,lbd->length);

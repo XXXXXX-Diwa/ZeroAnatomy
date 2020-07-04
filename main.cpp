@@ -1,5 +1,6 @@
 #include "main.h"
 #include "HeaderSeriesOut.h"
+#include "TileSetSeriesOut.h"
 
 void File::makefolder(string s){
     if(access(s.c_str(),0)==-1){
@@ -24,7 +25,6 @@ File::File(string s):FileRoute(s){
     }else{
         DataException::FileError(s,2);
     }
-    makefolder(FilePath+"HeaderSeries");//创建Header数据文件夹
 }
 File::~File(){
 
@@ -43,10 +43,13 @@ void File::MakeMainAsmFile(){
 
     mf<<".definelabel ZeroAnatomyFreeDataOffset,0x8770000\n"<<endl;
     //占用部分
-    mf<<".include \"HeaderSeries\\HeadGerenalData.asm\"\n"<<endl;
+    mf<<".include \"HeaderSeries\\HeadGerenalData.asm\""<<endl;
+    mf<<".include \"TileSetSeries\\TileSetGerenalData.asm\""<<endl;
+    mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
     mf<<".include \"HeaderSeries\\HeadCustomData.asm\""<<endl;
+    mf<<".include \"TileSetSeries\\TileSetCustomData.asm\""<<endl;
 
 
     //方便测试(临时尾)
@@ -64,6 +67,7 @@ int main(int argc,char* const argv[]){
     }else{
         readFile=make_unique<File>(argv[1]);
     }
+    File::makefolder(readFile->FilePath+"HeaderSeries");//创建Header数据文件夹
     readFile->MakeMainAsmFile();//制造和打印主文件
     //head数据部分
     unique_ptr<HeaderSeriesOut> hso(new HeaderSeriesOut(readFile->FileRoute,
@@ -72,7 +76,16 @@ int main(int argc,char* const argv[]){
     hso->HeadAllDataOut();     //Header数据导出
     readFile->allPrint.insert(readFile->allPrint.end(),//Head系列的信息数据交由主存储
         hso->headSeriesDLP.begin(),hso->headSeriesDLP.end());
-    hso.reset();
+    hso.reset();//header系列数据释放
+    //Tileset数据部分
+    File::makefolder(readFile->FilePath+"TileSetSeries");//创建TileSet数据文件夹
+    unique_ptr<TileSetSeriesOut> tsso(new TileSetSeriesOut(readFile->FileRoute,
+                                        readFile->FilePath+"TileSetSeries\\"));
+    tsso->MakeTileSetSeriesFolders();//创建Tileset数据所需的文件夹
+    tsso->TileSetAllDataOut();      //TileSet数据导出
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        tsso->tileSetSeriesDLP.begin(),tsso->tileSetSeriesDLP.end());
+    tsso.reset();
 
     readFile.reset();
 

@@ -124,12 +124,16 @@ Lz77BgData::~Lz77BgData(){
 
 //数据块在rom中的首尾要与4对齐 起码观察是如此的(未确认)
 
-void Lz77BgData::getLz77CompressData(ifstream &inf){
-    inf.read((char*)&bgSize,4);
+void Lz77BgData::getLz77CompressData(ifstream &inf,bool byte2flag){
+    if(byte2flag){
+        bgSize=0;
+    }else{
+        inf.read((char*)&bgSize,4);
+    }
     inf.read((char*)&decompressedLen,4);
-    inf.read((char*)lz77CompressedTileTable,decompressedLen>>8);
-    uint16_t bit16;
     uint32_t definelen=decompressedLen>>8;//标注的解压总长度
+    inf.read((char*)lz77CompressedTileTable,definelen);
+    uint16_t bit16;
     uint32_t total=0,len=0;//解压累计长度和当前读取位置
     uint8_t bit8,byte1,ut8;
     while(total<definelen){
