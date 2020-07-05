@@ -174,11 +174,10 @@ void TileSetSeriesOut::TileSetAllDataOut(){
             pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,0x1C0));
             break;
         case 2:
-            cout<<"Ö¸Õë2"<<hex<<(int)bit32<<endl;
+            cout<<"tile_table"<<hex<<(int)bit32<<endl;
             ttd->getTileTableData(inf);
             ouf.write((char*)ttd->data,ttd->length);
             cout<<hex<<(int)ttd->length;
-            cin.get();
             pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,ttd->length));
         }
         ouf.close();

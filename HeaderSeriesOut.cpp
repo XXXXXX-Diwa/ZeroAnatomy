@@ -136,10 +136,6 @@ string HeaderSeriesOut::dataType(uint8_t type){
     }
 }
 
-uint8_t HeaderSeriesOut::dataOutType(uint8_t property){
-    return (property&0x40)?1:0;
-}
-
 string HeaderSeriesOut::bgDataDescription   //格式:区域名+房间号+_数据类型+_压缩类型
 (const uint8_t type,const uint8_t property){
     return "_"+HeaderSeriesOut::dataType(type)+"_"
@@ -246,14 +242,10 @@ void HeaderSeriesOut::HeadAllDataOut(){
             desToOft.insert(pair<string,uint32_t>(testr[3],teoft[3]));
             desToOft.insert(pair<string,uint32_t>(testr[4],teoft[4]));
             //地址->压缩类型记录
-            oftToType.insert(pair<uint32_t,uint8_t>
-                             (teoft[0],HeaderSeriesOut::dataOutType(teu8[0])));
-            oftToType.insert(pair<uint32_t,uint8_t>
-                             (teoft[1],HeaderSeriesOut::dataOutType(teu8[1])));
-            oftToType.insert(pair<uint32_t,uint8_t>
-                             (teoft[2],HeaderSeriesOut::dataOutType(teu8[2])));
-            oftToType.insert(pair<uint32_t,uint8_t>
-                             (teoft[3],HeaderSeriesOut::dataOutType(teu8[3])));
+            oftToType.insert(pair<uint32_t,uint8_t>(teoft[0],teu8[0]>>6));//BG0可能为LZ77
+            oftToType.insert(pair<uint32_t,uint8_t>(teoft[1],0));//BG1只为Rel
+            oftToType.insert(pair<uint32_t,uint8_t>(teoft[2],0));//同上
+            oftToType.insert(pair<uint32_t,uint8_t>(teoft[3],1));//BG3只为LZ77
             oftToType.insert(pair<uint32_t,uint8_t>(teoft[4],0));//clip压缩固定为rel
             //地址->数据长度记录(初始长度全为0)
             oftToLen.insert(map<uint32_t,uint32_t>::value_type(teoft[1],0));

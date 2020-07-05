@@ -49,6 +49,7 @@ class HeaderSeriesOut{
     vector<uint32_t>areaHeaderOffset;   //每个区域的header数据地址
     vector<vector<HeaderInfo> > headInfo;   //记录所有区域每个房间的Head数据
     vector<DataListPrint>headSeriesDLP;  //记录每个数据的位置和长度,以便最终打印
+    uint32_t Bg3EmptyUseDataOffset=0x365038;
 
     HeaderSeriesOut(string name,string path);
     void MakeHeaderSeriesFolders();
@@ -56,7 +57,6 @@ class HeaderSeriesOut{
     static string areaName(uint8_t arean);
     static string numToHexStr(const uint32_t Num, const uint8_t width);
     static string compressType(uint8_t property);
-    static uint8_t dataOutType(uint8_t property);
     static string dataType(uint8_t type);
     static string bgDataDescription(const uint8_t type,const uint8_t property);
 

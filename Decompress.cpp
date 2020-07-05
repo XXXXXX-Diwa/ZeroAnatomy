@@ -85,11 +85,6 @@ void RelBgData::getRelCompressData(ifstream &inf){
             }
         }
     }
-    if(length!=total){
-        cout<<"布林斯坦房间6的未使用的bg3数据是唯一的错误数据,数据地址:365038"<<endl;
-        cout<<"因为只有这一个错误的数据,所以不想检查全部的无效数据了(降低效率)"<<endl;
-    }
-
     length=len+1;
 }
 
