@@ -27,7 +27,8 @@ TileSetSeriesOut::TileSetSeriesOut(string name,string path)
     DataListPrint tedlp;
     ouf<<".include \"TileSetSeries\\TileSetPointerDef.asm\"\n"
     <<"TileSetTable:"<<endl;
-    for(uint32_t i=0;i<=0xFF;++i){
+    uint32_t i=0;
+    for(;i<=0xFF;++i){
         bit32=inf.tellg();
         inf.read((char*)&tetsi,sizeof(tetsi));
         if((tetsi.graphicsPointer>>25)!=4||
@@ -38,12 +39,12 @@ TileSetSeriesOut::TileSetSeriesOut(string name,string path)
                 break;
             }
         tilesets.push_back(tetsi);
-        tedlp.len=0x14;
-        tedlp.offset=bit32;
+//        tedlp.len=0x14;
+//        tedlp.offset=bit32;
         tes="TileSet"+HeaderSeriesOut::numToHexStr(i,2);
-        tedlp.explain=tes+"_Info";
-        tileSetSeriesDLP.push_back(tedlp);
-        ouf<<";"<<tedlp.explain<<"\n\t.word "
+//        tedlp.explain=tes+"_Info";
+//        tileSetSeriesDLP.push_back(tedlp);
+        ouf<<";"<<tes<<"_Info\n\t.word "
         <<tes<<"_Level_Graphic_Pointer\n\t.word "
         <<tes<<"_Palette_Pointer\n\t.word "
         <<tes<<"_BG3_Graphic_Pointer\n\t.word "
@@ -54,6 +55,11 @@ TileSetSeriesOut::TileSetSeriesOut(string name,string path)
         <<setw(2)<<(int)tetsi.animatedPaletteNumber
         <<",0x00,0x00\n"<<endl;
     }
+    tedlp.explain="TileSetTable";           //原本每个都记录变为全部记录在一个地方
+    tedlp.offset=tileSetOffset;
+    tedlp.len=(++i)*0x14;
+    tileSetSeriesDLP.push_back(tedlp);
+
     inf.close();
     ouf.close();
 }
@@ -140,6 +146,7 @@ void TileSetSeriesOut::TileSetAllDataOut(){
     unique_ptr<Lz77BgData>lbd(new Lz77BgData());
     unique_ptr<PaletteData>ptd(new PaletteData());
     unique_ptr<TileTableData>ttd(new TileTableData());
+
     for(it=pointerType.begin();it!=pointerType.end();++it){
         bit32=it->first;
         switch(it->second){
@@ -174,10 +181,9 @@ void TileSetSeriesOut::TileSetAllDataOut(){
             pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,0x1C0));
             break;
         case 2:
-            cout<<"tile_table"<<hex<<(int)bit32<<endl;
             ttd->getTileTableData(inf);
+            ouf.write((char*)&ttd->head,2);
             ouf.write((char*)ttd->data,ttd->length);
-            cout<<hex<<(int)ttd->length;
             pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,ttd->length));
         }
         ouf.close();

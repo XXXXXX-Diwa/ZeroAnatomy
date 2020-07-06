@@ -1,6 +1,7 @@
 #include "main.h"
 #include "HeaderSeriesOut.h"
 #include "TileSetSeriesOut.h"
+#include "AnimatedOut.h"
 
 void File::makefolder(string s){
     if(access(s.c_str(),0)==-1){
@@ -45,11 +46,14 @@ void File::MakeMainAsmFile(){
     //占用部分
     mf<<".include \"HeaderSeries\\HeadGerenalData.asm\""<<endl;
     mf<<".include \"TileSetSeries\\TileSetGerenalData.asm\""<<endl;
+    mf<<".include \"AnimatedSeries\\AnimatedGerenalData.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
     mf<<".include \"HeaderSeries\\HeadCustomData.asm\""<<endl;
     mf<<".include \"TileSetSeries\\TileSetCustomData.asm\""<<endl;
+    mf<<".include \"AnimatedSeries\\AnimatedGpcDataTable.asm\""<<endl;
+    mf<<".include \"AnimatedSeries\\AnimatedPalDataTable.asm\""<<endl;
 
 
     //方便测试(临时尾)
@@ -86,6 +90,16 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
         tsso->tileSetSeriesDLP.begin(),tsso->tileSetSeriesDLP.end());
     tsso.reset();
+    //Animated数据部分
+    File::makefolder(readFile->FilePath+"AnimatedSeries");//创建Animated数据文件夹
+    unique_ptr<AnimatedOut> ao(new AnimatedOut(readFile->FileRoute,
+                                        readFile->FilePath+"AnimatedSeries\\"));
+    ao->MakeAnimatedOutFolders();
+    ao->AnimatedAllDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        ao->animatedDLP.begin(),ao->animatedDLP.end());
+    ao.reset();
+
 
     readFile.reset();
 

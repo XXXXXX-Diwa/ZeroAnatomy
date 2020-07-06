@@ -47,8 +47,9 @@ HeaderSeriesOut::HeaderSeriesOut(string name,string path)
         vector<HeaderInfo> teHeadInfo;
         HeaderInfo header;
         DataListPrint teDLP;
-        stringstream ss;
-        for(uint16_t j=0;j<0x10000;++j){
+//        stringstream ss;
+        uint32_t j=0;
+        for(;j<0x100;++j){
             byte4=inf.tellg();
 
             inf.read((char*)&header,sizeof(header));
@@ -71,13 +72,17 @@ HeaderSeriesOut::HeaderSeriesOut(string name,string path)
                 break;
             }
             teHeadInfo.push_back(header);
-            teDLP.offset=byte4;
-            teDLP.len=0X3C;
-            ss<<hex<<setiosflags(ios::uppercase)<<j;
-            ss>>teDLP.explain;
-            teDLP.explain=HeaderSeriesOut::areaName(i)+" room "+teDLP.explain+" HeaderData";
-            headSeriesDLP.push_back(teDLP);//每成功一个都记录在清单数据中
+//            teDLP.offset=byte4;
+//            teDLP.len=0X3C;
+//            ss<<hex<<setiosflags(ios::uppercase)<<j;
+//            ss>>teDLP.explain;
+//            teDLP.explain=HeaderSeriesOut::areaName(i)+" room "+teDLP.explain+" HeaderData";
+//            headSeriesDLP.push_back(teDLP);//每成功一个都记录在清单数据中
         }
+        teDLP.explain=areaName(i)+"_HeaderTable";//每个房间都记录变为每个区区记录
+        teDLP.offset=areaHeaderOffset[i];
+        teDLP.len=(++j)*0x3C;
+        headSeriesDLP.push_back(teDLP);
     }
     inf.close();
 }

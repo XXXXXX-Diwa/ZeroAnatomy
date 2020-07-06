@@ -4,10 +4,6 @@
 
 class AnimatedOut{
 public:
-    struct AnimatedTileSet{
-        uint8_t graphicsNumber;
-        uint16_t unused;//×ÜÎª0
-    };
     struct AnimatedGpcOrPal{
         uint8_t animatedType;
         uint8_t framesPerState;
@@ -17,12 +13,15 @@ public:
     };
 	string readRomRoute;
 	string animatedPath;
+    uint8_t tileSetData[0x3000];
     uint32_t ldrTileSetOft=0x5E200;
     uint32_t ldrGraphicsOft=0x5E1F8;
     uint32_t ldrPaletteOft[2]={0x5E320,0X5E484};
-    vector<AnimatedTileSet>ats;
+    vector<DataListPrint>animatedDLP;
     vector<AnimatedGpcOrPal>agpc;
     vector<AnimatedGpcOrPal>apal;
+    void MakeAnimatedOutFolders();
+    void AnimatedAllDataOut();
     AnimatedOut(string name,string path);
     ~AnimatedOut();
 };
