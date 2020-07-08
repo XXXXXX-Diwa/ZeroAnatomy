@@ -17,12 +17,16 @@ public:
     uint32_t ldrTileSetOft=0x5E200;
     uint32_t ldrGraphicsOft=0x5E1F8;
     uint32_t ldrPaletteOft[2]={0x5E320,0X5E484};
+    uint8_t numOfTileSet;
+    uint8_t numOfGfx;
+    uint8_t numOfPal;
     vector<DataListPrint>animatedDLP;
     vector<AnimatedGpcOrPal>agpc;
     vector<AnimatedGpcOrPal>apal;
     void MakeAnimatedOutFolders();
     void AnimatedAllDataOut();
-    AnimatedOut(string name,string path);
+    AnimatedOut(string name,string path,
+                uint8_t tilesetNum,uint8_t gfxNum,uint8_t palNum);
     ~AnimatedOut();
 };
 

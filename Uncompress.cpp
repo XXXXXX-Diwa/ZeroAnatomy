@@ -28,5 +28,17 @@ void TileTableData::getTileTableData(ifstream &inf){
     }
     head=0x02|(head<<8);
     inf.read((char*)data,length);
+}
 
+SpriteSetData::SpriteSetData(){}
+SpriteSetData::~SpriteSetData(){}
+void SpriteSetData::getSpriteSetData(ifstream &inf){
+    inf.read((char*)data,sizeof(data));
+    uint8_t i=0;
+    for(;i<0x10;++i){
+        if(data[i]==0){
+            break;
+        }
+    }
+    length=(++i)*2;
 }

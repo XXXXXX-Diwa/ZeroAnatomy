@@ -5,7 +5,7 @@
 *Header数据分为7个区域,每个区域的每个房间都有一个Header数据60字节长
 *每个房间有3层BG和一个实体数据要打印,3个精灵设置数据要打印(都不定长)
 **/
-HeaderSeriesOut::HeaderSeriesOut(string name,string path)
+HeaderSeriesOut::HeaderSeriesOut(string name,string path,uint8_t roomNumOfArea[])
                     :readRomRoute(name),HeaderPath(path){
     ifstream inf(readRomRoute,ios::in|ios::binary);
     if(inf.fail()){
@@ -49,7 +49,8 @@ HeaderSeriesOut::HeaderSeriesOut(string name,string path)
         DataListPrint teDLP;
 //        stringstream ss;
         uint32_t j=0;
-        for(;j<0x100;++j){
+//        for(;j<0xFF;++j){
+        for(;j<roomNumOfArea[i];++j){
             byte4=inf.tellg();
 
             inf.read((char*)&header,sizeof(header));
@@ -65,11 +66,12 @@ HeaderSeriesOut::HeaderSeriesOut(string name,string path)
                 header.effect>0xB||
                 header.BG3_Scrolling>0xA||
                 bit32==byte4-areaHeaderOffset[i]){
-                if(teHeadInfo.size()==0){
-                    DataException::DataError("区头数据房间数不该为0!");
-                }
-                headInfo.push_back(teHeadInfo);
-                break;
+//                if(teHeadInfo.size()==0){
+//                    DataException::DataError("区头数据房间数不该为0!");
+//                }
+//                headInfo.push_back(teHeadInfo);
+//                break;
+                DataException::DataError(areaName(i)+"房间"+numToHexStr(j,2)+"的header数据异常!");
             }
             teHeadInfo.push_back(header);
 //            teDLP.offset=byte4;
@@ -79,9 +81,10 @@ HeaderSeriesOut::HeaderSeriesOut(string name,string path)
 //            teDLP.explain=HeaderSeriesOut::areaName(i)+" room "+teDLP.explain+" HeaderData";
 //            headSeriesDLP.push_back(teDLP);//每成功一个都记录在清单数据中
         }
+        headInfo.push_back(teHeadInfo);
         teDLP.explain=areaName(i)+"_HeaderTable";//每个房间都记录变为每个区区记录
         teDLP.offset=areaHeaderOffset[i];
-        teDLP.len=(++j)*0x3C;
+        teDLP.len=j*0x3C;
         headSeriesDLP.push_back(teDLP);
     }
     inf.close();
@@ -188,10 +191,8 @@ void HeaderSeriesOut::HeadAllDataOut(){
     <<"\t.word Ridley_HeaderData\n"
     <<"\t.word Tourian_HeaderData\n"
     <<"\t.word Crateria_HeaderData\n"
-    <<"\t.word Chozodia_HeaderData\n"
-    <<".align\n"
-    <<".include \"HeaderSeries\\HeadPointerDef.asm\"\n"
-    <<".align"<<endl;
+    <<"\t.word Chozodia_HeaderData\n.align"
+    <<endl;
     //header数据循环遍历
     map<string,uint32_t>desToOft;  //描述->地址
     map<uint32_t,uint8_t>oftToType;//地址->压缩类型(0:rel,1:lz77,2:spritedata);
@@ -337,14 +338,14 @@ void HeaderSeriesOut::HeadAllDataOut(){
             ouf.put((char)rbd->roomWidth);
             ouf.put((char)rbd->roomHeigh);
             ouf.write((char*)rbd->relCompressedData,rbd->length);
-            teoft=rbd->length;
+            teoft=rbd->length+2;
             break;
         case 1:
             lbd->getLz77CompressData(inf,false);
             ouf.write((char*)&lbd->bgSize,4);
             ouf.write((char*)&lbd->decompressedLen,4);
             ouf.write((char*)lbd->lz77CompressedTileTable,lbd->length);
-            teoft=lbd->length;
+            teoft=lbd->length+8;
             break;
         default:
             spd->getSpriteData(inf);

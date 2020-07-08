@@ -25,8 +25,7 @@ TileSetSeriesOut::TileSetSeriesOut(string name,string path)
     inf.seekg(tileSetOffset,ios::beg);
     TileSetInfo tetsi;
     DataListPrint tedlp;
-    ouf<<".include \"TileSetSeries\\TileSetPointerDef.asm\"\n"
-    <<"TileSetTable:"<<endl;
+    ouf<<".align\nTileSetTable:"<<endl;
     uint32_t i=0;
     for(;i<=0xFF;++i){
         bit32=inf.tellg();
@@ -57,7 +56,7 @@ TileSetSeriesOut::TileSetSeriesOut(string name,string path)
     }
     tedlp.explain="TileSetTable";           //原本每个都记录变为全部记录在一个地方
     tedlp.offset=tileSetOffset;
-    tedlp.len=(++i)*0x14;
+    tedlp.len=i*0x14;
     tileSetSeriesDLP.push_back(tedlp);
 
     inf.close();
@@ -173,7 +172,7 @@ void TileSetSeriesOut::TileSetAllDataOut(){
             lbd->getLz77CompressData(inf,true);
             ouf.write((char*)&lbd->decompressedLen,4);
             ouf.write((char*)lbd->lz77CompressedTileTable,lbd->length);
-            pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,lbd->length));
+            pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,lbd->length+4));
             break;
         case 1:
             ptd->getPaletteData(inf,0x1C0);
@@ -184,7 +183,7 @@ void TileSetSeriesOut::TileSetAllDataOut(){
             ttd->getTileTableData(inf);
             ouf.write((char*)&ttd->head,2);
             ouf.write((char*)ttd->data,ttd->length);
-            pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,ttd->length));
+            pointerToLen.insert(pair<uint32_t,uint32_t>(bit32,ttd->length+2));
         }
         ouf.close();
     }

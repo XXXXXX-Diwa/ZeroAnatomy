@@ -51,7 +51,7 @@ class HeaderSeriesOut{
     vector<DataListPrint>headSeriesDLP;  //记录每个数据的位置和长度,以便最终打印
     uint32_t Bg3EmptyUseDataOffset=0x365038;
 
-    HeaderSeriesOut(string name,string path);
+    HeaderSeriesOut(string name,string path,uint8_t roomNumOfArea[]);
     void MakeHeaderSeriesFolders();
     ~HeaderSeriesOut();
     static string areaName(uint8_t arean);

@@ -1,13 +1,22 @@
 #include "AnimatedOut.h"
 #include "HeaderSeriesOut.h"
+bool agpcsort(const AnimatedOut::AnimatedGpcOrPal &a1,const AnimatedOut::AnimatedGpcOrPal &a2){
+    return a1.gpcOrPalDataPointer<a2.gpcOrPalDataPointer;
+}
 
-AnimatedOut::AnimatedOut(string name,string path)
-            :readRomRoute(name),animatedPath(path){
+bool agpcunique(const AnimatedOut::AnimatedGpcOrPal &a1,const AnimatedOut::AnimatedGpcOrPal &a2){
+    return a1.gpcOrPalDataPointer==a2.gpcOrPalDataPointer;
+}
+
+AnimatedOut::AnimatedOut(string name,string path,
+            uint8_t tilesetNum,uint8_t gfxNum,uint8_t palNum)
+            :readRomRoute(name),animatedPath(path),
+            numOfTileSet(tilesetNum),numOfGfx(gfxNum),numOfPal(palNum){
     ifstream inf(readRomRoute,ios::in|ios::binary);
     if(inf.fail()){
         DataException::FileError(readRomRoute,1);
     }
-    uint32_t byte4;
+    uint32_t byte4,bit32;
     inf.seekg(ldrGraphicsOft,ios::beg);
     inf.read((char*)&byte4,4);
     if((byte4>>25)!=4){
@@ -17,16 +26,20 @@ AnimatedOut::AnimatedOut(string name,string path)
     AnimatedGpcOrPal agop;
     DataListPrint tedlp;
     inf.seekg(byte4,ios::beg);
-    while(true){
+    for(uint8_t i=0;i<numOfGfx;++i){
         inf.read((char*)&agop,sizeof(agop));
         if(agop.animatedType!=0&&
            agop.animatedType!=1&&
            agop.animatedType!=4){
-            break;
+            bit32=inf.tellg();
+            bit32-=sizeof(agop);
+            DataException::DataError("AnimatedGfx数据异常!",bit32);
         }
         if(agop.unused!=0||
            (agop.gpcOrPalDataPointer>>25)!=4){
-            break;
+            bit32=inf.tellg();
+            bit32-=sizeof(agop);
+            DataException::DataError("AnimatedGfx数据异常!",bit32);
         }
         agpc.push_back(agop);
     }
@@ -38,20 +51,26 @@ AnimatedOut::AnimatedOut(string name,string path)
     inf.seekg(ldrPaletteOft[0],ios::beg);
     inf.read((char*)&byte4,4);
     if((byte4>>25)!=4){
-        DataException::DataError("TileSet指针异常!");
+        bit32=inf.tellg();
+        bit32-=4;
+        DataException::DataError("TileSet指针异常!",bit32);
     }
     byte4^=0x8000000;
     inf.seekg(byte4,ios::beg);
-    while(true){
+    for(uint8_t i=0;i<numOfPal;++i){
         inf.read((char*)&agop,sizeof(agop));
         if(agop.animatedType!=0&&
            agop.animatedType!=1&&
            agop.animatedType!=2){
-            break;
+            bit32=inf.tellg();
+            bit32-=-sizeof(agop);
+            DataException::DataError("AnimatedPal数据异常!",bit32);
         }
         if(agop.unused!=0||
            (agop.gpcOrPalDataPointer>>25)!=4){
-            break;
+            bit32=inf.tellg();
+            bit32-=-sizeof(agop);
+            DataException::DataError("AnimatedPal数据异常!",bit32);
         }
         apal.push_back(agop);
     }
@@ -70,7 +89,7 @@ void AnimatedOut::MakeAnimatedOutFolders(){
 
 void AnimatedOut::AnimatedAllDataOut(){
     string tes=animatedPath+"AnimatedGerenalData.asm";
-    uint32_t byte4;
+    uint32_t byte4,bit32;
     ofstream ouf(tes,ios::out);
     if(ouf.fail()){
         DataException::FileError(tes,0);
@@ -105,11 +124,14 @@ void AnimatedOut::AnimatedAllDataOut(){
     }
     byte4^=0x8000000;
     inf.seekg(byte4,ios::beg);
-    inf.read((char*)tileSetData,sizeof(tileSetData));
+    bit32=numOfTileSet*0x30;
+    inf.read((char*)tileSetData,bit32);
     uint32_t i=2;
-    for(;i<0x3000;i+=3){
+    for(;i<=bit32;i+=3){
         if(tileSetData[i]!=0||tileSetData[i-1]!=0){
-            break;
+            bit32=inf.tellg();
+            bit32-=i;
+            DataException::DataError("AnimatedTileSet数据异常!",bit32);
         }
     }
     i/=0x30;
@@ -128,7 +150,6 @@ void AnimatedOut::AnimatedAllDataOut(){
     }
     ouf<<".align\nAnimatedTileSetTable:"
     <<"\n\t.import \"AnimatedSeries\\AnimatedTileSetData.bin\""
-    <<"\n\n\t.include \"AnimatedSeries\\AnimatedGpcPointerData.asm\""
     <<"\nAnimatedGraphicsTable:"<<endl;
     map<string,uint32_t>desToOft;
     ofstream oub;
@@ -160,7 +181,7 @@ void AnimatedOut::AnimatedAllDataOut(){
         oub.close();
     }
     ouf.close();
-    testr=animatedPath+"AnimatedGpcPointerData.asm";
+    testr=animatedPath+"AnimatedGpcPointerDef.asm";
     ouf.open(testr,ios::out);
     if(ouf.fail()){
         DataException::FileError(testr,0);
@@ -180,8 +201,7 @@ void AnimatedOut::AnimatedAllDataOut(){
     if(ouf.fail()){
         DataException::FileError(tes,0);
     }
-    ouf<<"\t.include \"AnimatedSeries\\AnimatedPalPointerData.asm\""
-    <<"\nAnimatedPaletteTable:"<<endl;
+    ouf<<".align\nAnimatedPaletteTable:"<<endl;
     tes=animatedPath+"PalData\\";
     for(uint32_t i=0;i<apal.size();++i){
         tedlp.explain="AnimatedPalette"+HeaderSeriesOut::numToHexStr(i,2);
@@ -206,7 +226,7 @@ void AnimatedOut::AnimatedAllDataOut(){
         oub.close();
     }
     ouf.close();
-    testr=animatedPath+"AnimatedPalPointerData.asm";
+    testr=animatedPath+"AnimatedPalPointerDef.asm";
     ouf.open(testr,ios::out);
     if(ouf.fail()){
         DataException::FileError(tes,0);

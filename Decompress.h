@@ -18,6 +18,7 @@ public:
 class Lz77BgData{      //首位最好与4对齐
 public:
     uint32_t bgSize;    //0 = 256x256, 1 = 512x256, 2 = 256x512 只用了一字节
+    uint32_t definelen;
     uint32_t decompressedLen;   //用了三字节
     uint8_t lz77CompressedTileTable[0x8000];
     uint32_t length;

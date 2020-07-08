@@ -47,4 +47,14 @@ public:
     ~TileTableData();
     void getTileTableData(ifstream &inf);
 };
+
+class SpriteSetData{
+public:
+    uint8_t length;
+    uint16_t data[0x10];
+    SpriteSetData();
+    ~SpriteSetData();
+    void getSpriteSetData(ifstream &inf);
+
+};
 #endif // UNCOMPRESS_H_INCLUDED

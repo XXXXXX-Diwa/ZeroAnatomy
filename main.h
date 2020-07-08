@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <iostream>
+#include <cstdlib>
 #include <iomanip>
 #include <algorithm>
 #include <memory>
@@ -30,6 +31,7 @@ class File{
     static void makefolder(string s);
     File(string s);
     void MakeMainAsmFile();
+    void PrintList();
     ~File();
 };
 
