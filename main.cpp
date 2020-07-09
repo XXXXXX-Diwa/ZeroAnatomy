@@ -4,6 +4,7 @@
 #include "AnimatedOut.h"
 #include "ProjInfo.h"
 #include "SpriteSeries.h"
+#include "ConnectionsSeries.h"
 
 bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -58,6 +59,7 @@ void File::MakeMainAsmFile(){
     mf<<".include \"TileSetSeries\\TileSetGerenalData.asm\""<<endl;
     mf<<".include \"AnimatedSeries\\AnimatedGerenalData.asm\""<<endl;
     mf<<".include \"SpriteSeries\\SpriteGeneralData.asm\""<<endl;
+    mf<<".include \"ConnectionsSeries\\ConnectionGeneralData.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
@@ -79,6 +81,10 @@ void File::MakeMainAsmFile(){
     mf<<".include \"SpriteSeries\\SpritePalDataTable.asm\""<<endl;
     mf<<".include \"SpriteSeries\\SpriteSetPointerDef.asm\""<<endl;
     mf<<".include \"SpriteSeries\\SpriteSetDataTable.asm\""<<endl;
+
+    mf<<".include \"ConnectionsSeries\\DoorBinDataDef.asm\""<<endl;
+    mf<<".include \"ConnectionsSeries\\AreaHatchLockDataDef.asm\""<<endl;
+    mf<<".include \"ConnectionsSeries\\AreaDoorDataDef.asm\""<<endl;
 
 
     //方便测试(临时尾)
@@ -156,6 +162,14 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
         ss->spriteDLP.begin(),ss->spriteDLP.end());
     ss.reset();
+    //Connections数据部分
+    File::makefolder(readFile->FilePath+"ConnectionsSeries");
+    unique_ptr<ConnectionsSeries> cs(new ConnectionsSeries(readFile->FileRoute,
+                            readFile->FilePath+"ConnectionsSeries\\"));
+    cs->ConnectionsSeriesDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        cs->connectionsDLP.begin(),cs->connectionsDLP.end());
+    cs.reset();
 
     proj.reset();
     readFile->PrintList();
