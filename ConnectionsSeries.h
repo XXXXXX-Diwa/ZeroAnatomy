@@ -35,7 +35,7 @@ public:
     uint32_t ldrNumberOfAreaHatchLock=0x5F708;
     uint8_t defaultNumberOfEventDoor=0x29;//默认事件门的数量
     bool doorLabelModified;//门(程序)修改flag
-	uint32_t numberOfmodifiedEventDoorOft=0x5EFE4;//修改后的事件门数量记录处
+	uint32_t numberOfmodifiedEventDoorOft=0x5EFE4;//修改后的事件门数量记录处 ldr
 	uint32_t ldrModifiedLabelDoorDataOft=0x11F04;
 	uint32_t ldrEventDoorDataOft=0x5EFEC;
 	uint32_t modifiedDoorFunctionDataOft=0x5EFB0;//72字节(71)

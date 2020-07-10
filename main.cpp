@@ -5,6 +5,7 @@
 #include "ProjInfo.h"
 #include "SpriteSeries.h"
 #include "ConnectionsSeries.h"
+#include "Scrolls.h"
 
 bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -42,6 +43,28 @@ File::~File(){
 
 }
 
+void File::OpenFile(ifstream &in,string &s,bool bin){
+    if(bin){
+        in.open(s,ios::in|ios::binary);
+    }else{
+        in.open(s,ios::in);
+    }
+    if(in.fail()){
+        DataException::FileError(s,1);
+    }
+
+}
+void File::MakeFile(ofstream &out,string &s,bool bin){
+    if(bin){
+        out.open(s,ios::out|ios::binary);
+    }else{
+        out.open(s,ios::out);
+    }
+    if(out.fail()){
+        DataException::FileError(s,0);
+    }
+}
+
 void File::MakeMainAsmFile(){
     string tes=FilePath+"ZeroAnatomy.asm";
     ofstream mf(tes,ios::out);//创建主文件
@@ -60,6 +83,7 @@ void File::MakeMainAsmFile(){
     mf<<".include \"AnimatedSeries\\AnimatedGerenalData.asm\""<<endl;
     mf<<".include \"SpriteSeries\\SpriteGeneralData.asm\""<<endl;
     mf<<".include \"ConnectionsSeries\\ConnectionGeneralData.asm\""<<endl;
+    mf<<".include \"ScrollSeries\\ScrollGeneralData.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
@@ -84,7 +108,14 @@ void File::MakeMainAsmFile(){
 
     mf<<".include \"ConnectionsSeries\\DoorBinDataDef.asm\""<<endl;
     mf<<".include \"ConnectionsSeries\\AreaHatchLockDataDef.asm\""<<endl;
+    mf<<".include \"ConnectionsSeries\\AreaHatchLockPointerTable.asm\""<<endl;
     mf<<".include \"ConnectionsSeries\\AreaDoorDataDef.asm\""<<endl;
+    mf<<".include \"ConnectionsSeries\\AreaDoorPointerTable.asm\""<<endl;
+
+    mf<<".include \"ScrollSeries\\ScrollDataDef.asm\""<<endl;
+    mf<<".include \"ScrollSeries\\ScrollPointerDef.asm\""<<endl;
+    mf<<".include \"ScrollSeries\\AreaScrollPointerTable.asm\""<<endl;
+
 
 
     //方便测试(临时尾)
@@ -170,6 +201,15 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
         cs->connectionsDLP.begin(),cs->connectionsDLP.end());
     cs.reset();
+    //Scroll数据部分
+    File::makefolder(readFile->FilePath+"ScrollSeries");
+    unique_ptr<Scrolls> so(new Scrolls(readFile->FileRoute,
+            readFile->FilePath+"ScrollSeries\\",proj->roomsPerArea));
+    so->MakeScrollsFolder();
+    so->ScrollsDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        so->scrollsDLP.begin(),so->scrollsDLP.end());
+    so.reset();
 
     proj.reset();
     readFile->PrintList();

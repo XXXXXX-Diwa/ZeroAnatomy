@@ -292,6 +292,7 @@ void SpriteSeries::SpriteSeriesDataOut(){
             ouf.close();
         }
     }
+    inf.close();
     ldb.reset();
     ptd.reset();
     ssd.reset();

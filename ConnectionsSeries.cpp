@@ -120,36 +120,39 @@ void ConnectionsSeries::ConnectionsSeriesDataOut(){
         DataException::FileError(tes,0);
     }
     ouf<<hex<<setiosflags(ios::uppercase)<<setfill('0')
-    <<".org "<<setw(7)
+    <<".org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[0]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[1]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[2]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[3]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[4]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[5]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaDoorPointerTableOft[6]|0x8000000)
-    <<"\n\t.word AreaDoorPointerTable\n.org "<<setw(7)
+    <<"\n\t.word AreaDoorPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrAreaHatchLockTableOft|0x8000000)
-    <<"\n\t.word AreaHatchLockTable\n.org "<<setw(7)
+    <<"\n\t.word AreaHatchLockPointerTable\n.org 0x"<<setw(7)
     <<(int)(ldrNumberOfAreaHatchLock|0x8000000)
-    <<"\n\t.word NumberOfAreaHatchLock\n.org "<<setw(7)
+    <<"\n\t.word NumberOfAreaHatchLock\n.org 0x"<<setw(7)
     <<(int)(ldrDoorAreaTransferDataOft|0x8000000)
-    <<"\n\t.word DoorAreaTransferData\n.org "<<setw(7)
+    <<"\n\t.word DoorAreaTransferData\n.org 0x"<<setw(7)
     <<(int)(ldrEventDoorDataOft|0x8000000)
     <<"\n\t.word EventDoorData"<<endl;
     if(doorLabelModified){
         ouf<<hex<<setiosflags(ios::uppercase)<<setfill('0')
-        <<"\n.org "<<setw(7)
+        <<"\n.org 0x"<<setw(7)
+        <<(int)(numberOfmodifiedEventDoorOft|0x8000000)
+        <<"\n\t.word 0x"<<setw(4)<<(int)defaultNumberOfEventDoor
+        <<"\n.org 0x"<<setw(7)
         <<(int)(ldrModifiedLabelDoorDataOft|0x8000000)
-        <<"\n\t.word LabelDoorData\n.org "<<setw(7)
+        <<"\n\t.word LabelDoorData\n.org 0x"<<setw(7)
         <<(int)(doorLabelBLmodifiedOft|0x8000000)
-        <<"\n\t.db 0xFF,0xF7,0xD0,0xFC,0x2E,0xE0\n.org "<<setw(7)
+        <<"\n\t.db 0xFF,0xF7,0xD0,0xFC,0x2E,0xE0\n.org 0x"<<setw(7)
         <<(int)(modifiedDoorFunctionDataOft|0x8000000)
         <<"\n\t.import \"ConnectionsSeries\\ModifiedDoorFunctionData.bin\""
         <<endl;
@@ -279,6 +282,17 @@ LabelDoorData.bin\""<<endl;
     }
     ouf.close();
     //门数据导出
+    tes=connectionsPath+"AreaDoorPointerTable.asm";
+    ouf.open(tes,ios::out);
+    if(ouf.fail()){
+        DataException::FileError(tes,0);
+    }
+    ouf<<".align\nAreaDoorPointerTable:\n\t.word Area00DoorData\n\t\
+.word Area01DoorData\n\t.word Area02DoorData\n\t.word Area03DoorData\
+\n\t.word Area04DoorData\n\t.word Area05DoorData\n\t.word Area06DoorData"
+<<endl;
+    ouf.close();
+
     tes=connectionsPath+"AreaDoorDataDef.asm";
     ofstream oudef(tes,ios::out);
     if(oudef.fail()){
@@ -300,12 +314,12 @@ LabelDoorData.bin\""<<endl;
                }
         }
         tedlp.explain="Area"+HeaderSeriesOut::numToHexStr(i,2)+"DoorData";
-        oudef<<".align\n"<<tedlp.explain<<":\n\t.import \"connections\\"
+        oudef<<".align\n"<<tedlp.explain<<":\n\t.import \"ConnectionsSeries\\"
         <<tedlp.explain<<".bin\""<<endl;
         tedlp.len=(++j);
         tedlp.offset=bit32;
         connectionsDLP.push_back(tedlp);
-        tes=connectionsPath+tedlp.explain+"bin";
+        tes=connectionsPath+tedlp.explain+".bin";
         ouf.open(tes,ios::out|ios::binary);
         if(ouf.fail()){
             DataException::FileError(tes,0);
@@ -315,28 +329,46 @@ LabelDoorData.bin\""<<endl;
     }
     oudef.close();
     //导出门锁数据
+    tes=connectionsPath+"AreaHatchLockPointerTable.asm";
+    ouf.open(tes,ios::out);
+    if(ouf.fail()){
+        DataException::FileError(tes,0);
+    }
+    ouf<<".align\nAreaHatchLockPointerTable:\n\t.word Area00HatchLockData\n\t\
+.word Area01HatchLockData\n\t.word Area02HatchLockData\n\t\
+.word Area03HatchLockData\n\t.word Area04HatchLockData\n\t\
+.word Area05HatchLockData\n\t.word Area06HatchLockData"<<endl;
+    ouf.close();
+
     tes=connectionsPath+"AreaHatchLockDataDef.asm";
     oudef.open(tes,ios::out);
     if(oudef.fail()){
         DataException::FileError(tes,0);
     }
+    oudef<<".align"<<endl;
     for(uint32_t i=0;i<7;++i){
-        tedlp.offset=areaHatchLockPointer[i];
-        tedlp.explain="Area"+HeaderSeriesOut::numToHexStr(i,2)+"HatchLockData";
-        oudef<<".align\n"<<tedlp.explain<<":\n\t.import \"ConnectionsSeries\\"
-        <<tedlp.explain<<".bin\""<<endl;
-        tes=connectionsPath+tedlp.explain+".bin";
-        ouf.open(tes,ios::out|ios::binary);
-        if(ouf.fail()){
-            DataException::FileError(tes,0);
-        }
         bit32=numberOfAreaHatchLock[i]*8;
-        tedlp.len=bit32;
-        connectionsDLP.push_back(tedlp);
-        inf.seekg(tedlp.offset,ios::beg);
-        inf.read((char*)buffer,bit32);
-        ouf.write((char*)buffer,bit32);
-        ouf.close();
+        if(bit32==0){//区门锁数据为0的情况
+            tes="Area"+HeaderSeriesOut::numToHexStr(i,2)+"HatchLockData:";
+            oudef<<tes<<endl;
+        }else{
+            tedlp.len=bit32;
+            tedlp.offset=areaHatchLockPointer[i];
+            tedlp.explain="Area"+HeaderSeriesOut::numToHexStr(i,2)+"HatchLockData";
+            oudef<<tedlp.explain<<":\n\t.import \"ConnectionsSeries\\"
+            <<tedlp.explain<<".bin\""<<endl;
+            tes=connectionsPath+tedlp.explain+".bin";
+            ouf.open(tes,ios::out|ios::binary);
+            if(ouf.fail()){
+                DataException::FileError(tes,0);
+            }
+            connectionsDLP.push_back(tedlp);
+            inf.seekg(tedlp.offset,ios::beg);
+            inf.read((char*)buffer,bit32);
+            ouf.write((char*)buffer,bit32);
+            ouf.close();
+        }
     }
     oudef.close();
+    inf.close();
 }

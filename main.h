@@ -29,6 +29,8 @@ class File{
     vector<DataListPrint> allPrint;
 
     static void makefolder(string s);
+    static void OpenFile(ifstream &in,string &s,bool bin);
+    static void MakeFile(ofstream &out,string &s,bool bin);
     File(string s);
     void MakeMainAsmFile();
     void PrintList();

@@ -355,6 +355,7 @@ void HeaderSeriesOut::HeadAllDataOut(){
         oftToLen[it->first]=teoft;      //记录每个数据的长度
         ouf.close();
     }
+    inf.close();
     rbd.reset();
     lbd.reset();
     spd.reset();    //指针over

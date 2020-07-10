@@ -56,6 +56,7 @@ ProjInfo::ProjInfo(string name){
         tes=s.substr(16);
         numOfSpritesets=strtol(tes.c_str(),NULL,16);
     }
+    inf.close();
 }
 ProjInfo::~ProjInfo(){
 
