@@ -5,6 +5,7 @@
 *每个房间最多16个卷轴,每个区卷轴结束的指针为0x34597C
 *对应数据 FF FF FF FF FF FF FF FF FF FF
 **/
+/**所有(任何类型)的指针的地址必须与四对齐**/
 struct ScrollData{
     uint8_t xPosBegin;
     uint8_t xPosEnd;

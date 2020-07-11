@@ -105,7 +105,7 @@ void Scrolls::ScrollsDataOut(){
 
     for(uint32_t i=0;i<7;++i){
         bit32=ScrollsDataPointer[i].size()-1;
-        oudef<<"Area"<<HeaderSeriesOut::numToHexStr(i,2)<<"ScrollData:"<<endl;
+        oudef<<".align\nArea"<<HeaderSeriesOut::numToHexStr(i,2)<<"ScrollData:"<<endl;
         for(uint32_t j=0;j<bit32;++j){
             tedlp.offset=ScrollsDataPointer[i][j];
             tedlp.len=oftToLen[tedlp.offset];

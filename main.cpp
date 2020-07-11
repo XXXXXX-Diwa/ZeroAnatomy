@@ -6,6 +6,7 @@
 #include "SpriteSeries.h"
 #include "ConnectionsSeries.h"
 #include "Scrolls.h"
+#include "MiniMap.h"
 
 bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -84,9 +85,11 @@ void File::MakeMainAsmFile(){
     mf<<".include \"SpriteSeries\\SpriteGeneralData.asm\""<<endl;
     mf<<".include \"ConnectionsSeries\\ConnectionGeneralData.asm\""<<endl;
     mf<<".include \"ScrollSeries\\ScrollGeneralData.asm\""<<endl;
+    mf<<".include \"MiniMapSeries\\MiniMapGeneralData.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
+
     mf<<".include \"HeaderSeries\\HeadPointerDef.asm\""<<endl;
     mf<<".include \"HeaderSeries\\HeadCustomData.asm\""<<endl;
 
@@ -116,7 +119,8 @@ void File::MakeMainAsmFile(){
     mf<<".include \"ScrollSeries\\ScrollPointerDef.asm\""<<endl;
     mf<<".include \"ScrollSeries\\AreaScrollPointerTable.asm\""<<endl;
 
-
+    mf<<".include \"MiniMapSeries\\MiniMapDataDef.asm\""<<endl;
+    mf<<".include \"MiniMapSeries\\MiniMapDataPointerTable.asm\""<<endl;
 
     //方便测试(临时尾)
     mf<<".close"<<endl;
@@ -210,6 +214,14 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
         so->scrollsDLP.begin(),so->scrollsDLP.end());
     so.reset();
+    //MiniMap数据部分
+    File::makefolder(readFile->FilePath+"MiniMapSeries");
+    unique_ptr<MiniMap> mm(new MiniMap(readFile->FileRoute,
+                        readFile->FilePath+"MiniMapSeries\\"));
+    mm->MapDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+                    mm->mdlp.begin(),mm->mdlp.end());
+    mm.reset();
 
     proj.reset();
     readFile->PrintList();
