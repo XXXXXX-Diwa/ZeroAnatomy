@@ -24,7 +24,7 @@ ProjInfo::ProjInfo(string name){
     }else{
         string tes;
         for(int i=0;i<9;++i){
-            getline(inf,s);//¶ÁÈ¡µÚ¾ÅÐÐ
+            getline(inf,s);//è¯»å–ç¬¬ä¹è¡Œ
         }
         tes=s.substr(13,15);
         roomsPerArea[0]=strtol(tes.c_str(),NULL,16);

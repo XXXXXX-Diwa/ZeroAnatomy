@@ -1,7 +1,7 @@
 #ifndef PROJINFO_H_INCLUDED
 #define PROJINFO_H_INCLUDED
 #include "main.h"
-//mage测试问题 7d870a-7d91ff全部ff
+//mage娴嬭瘯闂 7d870a-7d91ff鍏ㄩ儴ff
 class ProjInfo{
 public:
     uint8_t roomsPerArea[7];

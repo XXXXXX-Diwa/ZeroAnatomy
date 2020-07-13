@@ -29,20 +29,11 @@ MiniMap::MiniMap(string rom,string path):readRom(rom),curPath(path){
         bit32^=0x8000000;
         it=oftToNo.find(bit32);
         if(it!=oftToNo.end()){
-                cout<<hex<<"地址: "<<(int)it->first<<" pushback了 "<<(int)i<<endl;
             it->second.push_back(i);
         }else{
-            cout<<hex<<"地址: "<<(int)bit32<<" 直接载入了 "<<(int)i<<endl;
             vector<uint8_t>tev(1,i);
             oftToNo.insert(pair<uint32_t,vector<uint8_t> >(bit32,tev));
         }
-    }
-    for(it=oftToNo.begin();it!=oftToNo.end();++it){
-        cout<<hex<<"地址: "<<(int)it->first<<" 包括的序号有: ";
-        for(uint8_t i=0;i<it->second.size();++i){
-            cout<<hex<<(int)it->second[i]<<" ";
-        }
-        cout<<endl;
     }
     inf.close();
 }

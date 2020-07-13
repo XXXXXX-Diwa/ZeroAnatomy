@@ -7,6 +7,7 @@
 #include "ConnectionsSeries.h"
 #include "Scrolls.h"
 #include "MiniMap.h"
+#include "Sounds.h"
 
 bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -222,6 +223,13 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
                     mm->mdlp.begin(),mm->mdlp.end());
     mm.reset();
+    //Sounds数据部分
+    File::makefolder(readFile->FilePath+"SoundSeries");
+    unique_ptr<Sounds> Sod(new Sounds(readFile->FileRoute,
+                        readFile->FilePath+"SoundSeries\\"));
+    Sod->MakeSoundSeriesFolder();
+
+    Sod.reset();
 
     proj.reset();
     readFile->PrintList();
