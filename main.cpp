@@ -87,6 +87,7 @@ void File::MakeMainAsmFile(){
     mf<<".include \"ConnectionsSeries\\ConnectionGeneralData.asm\""<<endl;
     mf<<".include \"ScrollSeries\\ScrollGeneralData.asm\""<<endl;
     mf<<".include \"MiniMapSeries\\MiniMapGeneralData.asm\""<<endl;
+    mf<<".include \"SoundSeries\\TrackGerenalData.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
@@ -123,6 +124,14 @@ void File::MakeMainAsmFile(){
     mf<<".include \"MiniMapSeries\\MiniMapDataDef.asm\""<<endl;
     mf<<".include \"MiniMapSeries\\MiniMapDataPointerTable.asm\""<<endl;
 
+    mf<<".include \"SoundSeries\\DamageData.asm\""<<endl;
+    mf<<".include \"SoundSeries\\SamplesDef.asm\""<<endl;
+    mf<<".include \"SoundSeries\\TrackData.asm\""<<endl;
+    mf<<".include \"SoundSeries\\TrackHeaderData.asm\""<<endl;
+    mf<<".include \"SoundSeries\\TrackTableData.asm\""<<endl;
+    mf<<".include \"SoundSeries\\VoiceGroupData.asm\""<<endl;
+    mf<<".include \"SoundSeries\\WaveMemoryData.asm\""<<endl;
+
     //方便测试(临时尾)
     mf<<".close"<<endl;
 
@@ -157,6 +166,9 @@ int main(int argc,char* const argv[]){
     }else{
         readFile=make_unique<File>(argv[1]);
     }
+    //运行时间部分
+    RunTimes *durt=RunTimes::SharedRunTime();
+
     //Proj数据部分
     unique_ptr<ProjInfo>proj(new ProjInfo(readFile->FileRoute));
 
@@ -223,17 +235,19 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
                     mm->mdlp.begin(),mm->mdlp.end());
     mm.reset();
+
+    durt->RunFinish("Sounds数据处理之前");
+
     //Sounds数据部分
     File::makefolder(readFile->FilePath+"SoundSeries");
     unique_ptr<Sounds> Sod(new Sounds(readFile->FileRoute,
                         readFile->FilePath+"SoundSeries\\"));
     Sod->MakeSoundSeriesFolder();
-
+    Sod->SoundSeriesDataOut();
     Sod.reset();
 
     proj.reset();
     readFile->PrintList();
     readFile.reset();
-
     return 0;
 }
