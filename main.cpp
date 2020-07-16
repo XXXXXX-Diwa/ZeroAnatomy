@@ -244,6 +244,8 @@ int main(int argc,char* const argv[]){
                         readFile->FilePath+"SoundSeries\\"));
     Sod->MakeSoundSeriesFolder();
     Sod->SoundSeriesDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+                    Sod->songdlp.begin(),Sod->songdlp.end());
     Sod.reset();
 
     proj.reset();

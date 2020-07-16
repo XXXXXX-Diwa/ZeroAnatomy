@@ -66,9 +66,9 @@ private:
     map<uint32_t,Info>pointer;//所有数据的指针
     map<uint32_t,vector<uint8_t> >multiKey;//记录multi使用了那些键位
     uint8_t buffer[0x40000];
-    uint32_t HeaderOft;
+//    uint32_t HeaderOft;
     SimKey skeys[128];
-    vector<DataListPrint>songdlp;
+
     static void PrintData(ofstream &,uint8_t [],const uint32_t length);
 public:
 
@@ -82,7 +82,7 @@ public:
 //    track    21 指针位置
 //    header   40
 //    table    80
-
+    vector<DataListPrint>songdlp;
     Sounds(string rom,string path);
     ~Sounds();
     void MakeSoundSeriesFolder();

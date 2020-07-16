@@ -134,7 +134,7 @@ void MiniMap::MapDataOut(){
         File::MakeFile(ouf,tes,true);
         inf.seekg(tedlp.offset,ios::beg);
         lz7->getLz77CompressData(inf,true);
-        tedlp.offset=lz7->length+4;
+        tedlp.len=lz7->length+4;
         mdlp.push_back(tedlp);
         ouf.write((char*)&lz7->decompressedLen,4);
         ouf.write((char*)&lz7->lz77CompressedTileTable,lz7->length);

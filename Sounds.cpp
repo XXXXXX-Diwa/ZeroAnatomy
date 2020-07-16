@@ -65,10 +65,10 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
         inf.read((char*)&header,sizeof(header));
         if(header.amountOfTracks==0||header.amountOfTracks>16){
             if(pointer.find(offset)==pointer.end()){
-                info.describe="InvaildTrackHeader";
+                info.describe="TrackHeader_"+HeaderSeriesOut::numToHexStr(offset,7);
                 info.typeLen=0x40000004;//无效的只提供4byte无效数据
                 pointer.insert(pair<uint32_t,Info>(offset,info));
-                tedlp.explain="InvaildTrackHeader";
+                tedlp.explain=info.describe;
                 tedlp.len=4;
                 songdlp.push_back(tedlp);
             }
@@ -100,16 +100,21 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
     /**track部分**/
     durt=RunTimes::SharedRunTime();
 
-    sort(trackofts.begin(),trackofts.end());//排序并去重
+    sort(trackofts.begin(),trackofts.end());//排序并去重 貌似有点多余..
     trackofts.erase(unique(trackofts.begin(),trackofts.end()),trackofts.end());
 
     uint8_t bit8;
     //记录track中指针的地址和指针本身,值为类型 0:指针所处地址 1:指针指向地址 2:结尾地址
     map<uint32_t,uint32_t>oftToB;
     map<uint32_t,uint32_t>::iterator it;
-
+//    bool jj=false;
     for(uint32_t i=0;i<trackofts.size();++i){
         byte4=trackofts[i];
+//        if(byte4==0x20b090){
+//            jj=true;
+//        }else{
+//            jj=false;
+//        }
         inf.seekg(byte4,ios::beg);
         tedlp.explain="Track_"+HeaderSeriesOut::numToHexStr(byte4,7);
         tedlp.offset=byte4;
@@ -122,44 +127,52 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
             }
         }
         inf.read((char*)buffer,bit32);
-        for(uint32_t j=0;j<bit32;){
+        for(uint32_t j=0;;){
             bit8=buffer[j];
             ++j;
-            if(bit8>0xB0){
-                if(bit8==0xB2||bit8==0xB3){
-                    offset=*(uint32_t*)&buffer[j];
-                    j+=4;
+            if(bit8==0xB2||bit8==0xB3){
+                offset=*(uint32_t*)&buffer[j];
+                j+=4;
 //                    cout<<"offset"<<hex<<offset<<endl;
-                    if((offset>>25)!=4){
-                        DataException::DataError("track数据中的地址非指针!",bit32);
-                    }
-                    offset^=0x8000000;
-                    if(offset<byte4){
-                        DataException::DataError("track数据中的地址比track开始地址还小!",bit32);
-                    }
-                    oftToB.insert(pair<uint32_t,uint32_t>(byte4+j-4,offset));//指针所在位置->指向位置
-//                    cout<<"所在位置: "<<hex<<byte4+j-4<<endl;
-                    if(oftToB.find(offset)==oftToB.end()){
-                        oftToB.insert(pair<uint32_t,uint32_t>(offset,0));//指针指向位置
-                    }
-                }else if(bit8==0xB1){
-                    oftToB.insert(pair<uint32_t,uint32_t>(trackofts[i]+j,0));//结束所在位置
-                    tedlp.len=j;
-                    songdlp.push_back(tedlp);
-                    break;
+                if((offset>>25)!=4){
+                    DataException::DataError("track数据中的地址非指针!",bit32);
                 }
+                offset^=0x8000000;
+                if(offset<byte4){
+                    DataException::DataError("track数据中的地址比track开始地址还小!",bit32);
+                }
+                oftToB.insert(pair<uint32_t,uint32_t>(byte4+j-4,offset));//指针所在位置->指向位置
+//                    cout<<"所在位置: "<<hex<<byte4+j-4<<endl;
+                if(oftToB.find(offset)==oftToB.end()){
+                    oftToB.insert(pair<uint32_t,uint32_t>(offset,0));//指针指向位置
+                }
+            }else if(bit8==0xB1){
+                oftToB.insert(pair<uint32_t,uint32_t>(trackofts[i]+j,0));//结束所在位置
+                tedlp.len=j;
+                songdlp.push_back(tedlp);
+                break;
+            }else if(j>=bit32){//结尾非0xB1的歌曲情况(太奇葩了)
+                if(bit32>0x200){
+                    DataException::DataError("有结尾非0xB1的曲子,并且长度超过了0x200",trackofts[i]);
+                }
+                oftToB.insert(pair<uint32_t,uint32_t>(trackofts[i]+j,0));//结束所在位置
+                tedlp.len=j;
+                songdlp.push_back(tedlp);
+                break;
             }
         }
+//        if(jj){
         it=oftToB.begin();
         while(true){
             bit32=it->first;//记录坐标
             byte4=it->second;
+            ++it;
             if(byte4){
-                ++it;
+                //指针所在位置肯定不是最末所以不用判断it是否出界
                 info.describe="Track_"+HeaderSeriesOut::numToHexStr(byte4,7);
                 info.typeLen=0x21000000|(it->first-bit32-4);
             }else{
-                if((++it)==oftToB.end()){
+                if(it==oftToB.end()){
                     break;
                 }
                 info.describe="Track_"+HeaderSeriesOut::numToHexStr(bit32,7);
@@ -167,6 +180,7 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
             }
             pointer.insert(pair<uint32_t,Info>(bit32,info));
         }
+//        }
         oftToB.clear();
     }
 
@@ -338,14 +352,13 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
         for(uint8_t i=0;i<=bit8;++i){//记录使用的样本
 //            inf.seekg(offset+mt->second[i]*12,ios::beg);
 //            inf.read((char*)keys,12);
-            bit8=keys[i].type&0xC7;//去掉18(E7);0x8d984处莫名有20开头,故20也去掉
-            if(!bit8){//multi好像只有sample的类型,毕竟叫multisample
+            bit32=keys[i].type&0xC7;//去掉18(E7);0x8d984处莫名有20开头,故20也去掉
+            if(!bit32){//multi好像只有sample的类型,毕竟叫multisample
                 bit32=keys[i].difoft;
                 if((bit32>>25)!=4){
                     if(keys[i].difoft==0&&keys[i].meydamoft==0){
-                        break;
+                        continue;
                     }
-                    twicebreak=true;
                     break;
                 }
                 bit32^=0x8000000;
@@ -368,6 +381,8 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
             info.describe="MultiSample_"+HeaderSeriesOut::numToHexStr(offset,7);
         }
         if((++it)==oftToB.end()){
+            info.typeLen=oftToB[offset];//记录进坐标中
+            pointer.insert(pair<uint32_t,Info>(offset,info));
             break;
         }
         pretail=offset+(byte4<<8>>8)*12;
@@ -453,7 +468,7 @@ void Sounds::SoundSeriesDataOut(){
     ifstream inf;
     ofstream ouf,oth,otf,ovg,odg,owm,osd;
     string tes=curPath+"TrackGerenalData.asm";
-    uint32_t bit32,byte4,offset=0;
+    uint32_t bit32,byte4;//offset=0;
     DataListPrint tedlp;
     File::MakeFile(ouf,tes,false);
     for(uint8_t i=0;i<19;++i){
@@ -550,10 +565,12 @@ void Sounds::SoundSeriesDataOut(){
                     bit32&=0xC7;
                     switch(bit32){
                     case 0:
-                        ovg<<"\t.word 0x"<<setw(8)<<skeys[i].type
-                        <<",Sample_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft,7)
-                        <<",0x"<<setw(8)<<skeys[i].adsr<<endl;
-                        break;
+                        if((skeys[i].oft>>25)==4){
+                            ovg<<"\t.word 0x"<<setw(8)<<skeys[i].type
+                            <<",Sample_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft<<5>>5,7)
+                            <<",0x"<<setw(8)<<skeys[i].adsr<<endl;
+                            break;
+                        }
                     case 1:
                     case 2:
                     case 4:
@@ -563,17 +580,17 @@ void Sounds::SoundSeriesDataOut(){
                         break;
                     case 3:
                         ovg<<"\t.word 0x"<<setw(8)<<skeys[i].type
-                        <<",WaveMemory_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft,7)
+                        <<",WaveMemory_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft<<5>>5,7)
                         <<",0x"<<setw(8)<<skeys[i].adsr<<endl;
                         break;
                     case 0x40:
                         ovg<<"\t.word 0x"<<setw(8)<<skeys[i].type
-                        <<",MultiSample_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft,7)
-                        <<",Damage_"<<HeaderSeriesOut::numToHexStr(skeys[i].adsr,7)<<endl;
+                        <<",MultiSample_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft<<5>>5,7)
+                        <<",Damage_"<<HeaderSeriesOut::numToHexStr(skeys[i].adsr<<5>>5,7)<<endl;
                         break;
                     case 0x80:
                         ovg<<"\t.word 0x"<<setw(8)<<skeys[i].type
-                        <<",DrumPart_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft,7)
+                        <<",DrumPart_"<<HeaderSeriesOut::numToHexStr(skeys[i].oft<<5>>5,7)
                         <<",0x"<<setw(8)<<skeys[i].adsr<<endl;
                         break;
                     default:
@@ -598,18 +615,18 @@ void Sounds::SoundSeriesDataOut(){
         case 0x40://track header
             {
                 if(byte4<12){
-                    oth<<"InvaildTrackHeader:\n\t.word 0x00000000"<<endl;
+                    oth<<it->second.describe<<":\n\t.word 0x00000000"<<endl;
                     break;
                 }
                 inf.read((char*)&header,byte4);
-                oth<<"TrackHeader_"<<HeaderSeriesOut::numToHexStr(it->first,7)
+                oth<<it->second.describe<<":"
                 <<"\n\t.word 0x"<<setw(8)<<header.amoutOfTracks
                 <<"\n\t.word VoiceGroup_"
-                <<HeaderSeriesOut::numToHexStr(header.voiceGroupOft,7)<<endl;
+                <<HeaderSeriesOut::numToHexStr(header.voiceGroupOft<<5>>5,7)<<endl;
                 byte4=header.amoutOfTracks<<24>>24;
                 for(uint32_t i=0;i<byte4;++i){
                     oth<<"\t.word Track_"
-                    <<HeaderSeriesOut::numToHexStr(header.trackDataOft[i],7)
+                    <<HeaderSeriesOut::numToHexStr(header.trackDataOft[i]<<5>>5,7)
                     <<endl;
                 }
                 break;
@@ -625,7 +642,7 @@ void Sounds::SoundSeriesDataOut(){
                 ouf<<hex<<setiosflags(ios::uppercase)<<setfill('0');
                 for(uint32_t i=0;i<byte4;++i){
                     ouf<<"\t.word TrackHeader_"
-                    <<HeaderSeriesOut::numToHexStr(table[i].HeaderOft,7)
+                    <<HeaderSeriesOut::numToHexStr(table[i].HeaderOft<<5>>5,7)
                     <<",0x"<<setw(8)<<table[i].songGroup<<endl;
                 }
                 ouf.close();
