@@ -39,6 +39,9 @@ MiniMap::MiniMap(string rom,string path):readRom(rom),curPath(path){
 }
 
 MiniMap::~MiniMap(){}
+void MiniMap::MakeMiniMapSeriesFolder(){
+    File::makefolder(curPath+"MapData");
+}
 
 void MiniMap::MapDataOut(){
     ifstream inf;
@@ -130,7 +133,7 @@ void MiniMap::MapDataOut(){
         tedlp.explain="MiniMap"+HeaderSeriesOut::numToHexStr(byte4,2)+"Data";
         tedlp.offset=it->first;
         testr=HeaderSeriesOut::numToHexStr(tedlp.offset,7);
-        tes=curPath+testr+".lz7";
+        tes=curPath+"MapData\\"+testr+".lz7";
         File::MakeFile(ouf,tes,true);
         inf.seekg(tedlp.offset,ios::beg);
         lz7->getLz77CompressData(inf,true);
@@ -145,7 +148,7 @@ void MiniMap::MapDataOut(){
             <<"DataPointer:"<<endl;
         }
         oudef<<".align\n"<<tedlp.explain
-        <<"Pointer:\n\t.import \"MiniMapSeries\\"<<testr<<".lz7\""<<endl;
+        <<"Pointer:\n\t.import \"MiniMapSeries\\MapData\\"<<testr<<".lz7\""<<endl;
     }
     lz7.reset();
     ouf.close();

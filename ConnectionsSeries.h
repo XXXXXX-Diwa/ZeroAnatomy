@@ -26,7 +26,7 @@
 **/
 #include "main.h"
 class ConnectionsSeries{
-public:
+private:
     string readRomRoute;
     string connectionsPath;
     uint32_t ldrAreaDoorPointerTableOft[7]=
@@ -44,12 +44,13 @@ public:
 	vector<uint16_t> numberOfAreaHatchLock;//每个区域门锁房间的数量
     vector<uint32_t> areaHatchLockPointer;//每个区门锁数据指针
     vector<uint32_t> areaDoorPointers;//每个区域的门数据指针
+    uint8_t buffer[0xC00];
+public:
     vector<DataListPrint>connectionsDLP;
-	uint8_t buffer[0xC00];
     ConnectionsSeries(string name,string path);
     ~ConnectionsSeries();
-//    void MakeConnectionsFolder(string name,string path);
     void ConnectionsSeriesDataOut();
+    void MakeConnectionsSeriesFolder();
     uint32_t CallPointerCalculate(ifstream &inf,uint32_t blOffset);
 };
 

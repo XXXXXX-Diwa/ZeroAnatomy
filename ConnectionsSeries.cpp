@@ -107,7 +107,10 @@ uint32_t ConnectionsSeries::CallPointerCalculate(ifstream &inf,uint32_t blOffset
 }
 
 ConnectionsSeries::~ConnectionsSeries(){}
-//void ConnectionsSeries::MakeConnectionsFolder(){}
+void ConnectionsSeries::MakeConnectionsSeriesFolder(){
+    File::makefolder(connectionsPath+"DoorData");
+    File::makefolder(connectionsPath+"HatchLockData");
+}
 void ConnectionsSeries::ConnectionsSeriesDataOut(){
     uint32_t bit32;
     ifstream inf(readRomRoute,ios::in|ios::binary);
@@ -314,12 +317,13 @@ LabelDoorData.bin\""<<endl;
                }
         }
         tedlp.explain="Area"+HeaderSeriesOut::numToHexStr(i,2)+"DoorData";
-        oudef<<".align\n"<<tedlp.explain<<":\n\t.import \"ConnectionsSeries\\"
+        oudef<<".align\n"<<tedlp.explain
+        <<":\n\t.import \"ConnectionsSeries\\DoorData\\"
         <<tedlp.explain<<".bin\""<<endl;
         tedlp.len=(++j);
         tedlp.offset=bit32;
         connectionsDLP.push_back(tedlp);
-        tes=connectionsPath+tedlp.explain+".bin";
+        tes=connectionsPath+"DoorData\\"+tedlp.explain+".bin";
         ouf.open(tes,ios::out|ios::binary);
         if(ouf.fail()){
             DataException::FileError(tes,0);
@@ -355,9 +359,10 @@ LabelDoorData.bin\""<<endl;
             tedlp.len=bit32;
             tedlp.offset=areaHatchLockPointer[i];
             tedlp.explain="Area"+HeaderSeriesOut::numToHexStr(i,2)+"HatchLockData";
-            oudef<<tedlp.explain<<":\n\t.import \"ConnectionsSeries\\"
+            oudef<<tedlp.explain
+            <<":\n\t.import \"ConnectionsSeries\\HatchLockData\\"
             <<tedlp.explain<<".bin\""<<endl;
-            tes=connectionsPath+tedlp.explain+".bin";
+            tes=connectionsPath+"HatchLockData\\"+tedlp.explain+".bin";
             ouf.open(tes,ios::out|ios::binary);
             if(ouf.fail()){
                 DataException::FileError(tes,0);

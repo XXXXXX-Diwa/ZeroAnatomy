@@ -8,6 +8,7 @@
 *,长度为非字节,而是具体类型,似乎无法超过FD个
 *每个demo连续两个,60c14处ldr
 *第一个为按键的数据,每个4字节,第二个为按键的持续时间,每个两字节
+*demo的事件修改在60c2a
 **/
 
 class Demo{
@@ -20,7 +21,7 @@ private:
     };
     string readRom;
     string curPath;
-    uint32_t ldrDemoOrder[2]={0x60C0c,0x60CEC};
+    uint32_t ldrDemoOrder[2]={0x60C0C,0x60CEC};
     uint32_t ldrDemoState=0x753C8;
     uint32_t ldrDemoKeys=0x60C14;
     uint8_t buffer[0x440];
@@ -33,6 +34,7 @@ public:
     vector<DataListPrint>demodlp;
     Demo(string rom,string path);
     ~Demo();
+    void MakeDemoSeriesFolder();
     void DemoDataOut();
 };
 

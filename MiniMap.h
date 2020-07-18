@@ -10,7 +10,6 @@ class MiniMap{
 private:
     string readRom;
     string curPath;
-public:
     uint32_t ldrDataPointerTableOft=0x6B174;
     uint32_t ldrGraphicsOft[5]={
         0x6A6B4,0x6C780,0x6C86C,0x6C948,0x6CA38};
@@ -19,10 +18,11 @@ public:
     uint32_t paletteLen=0xA0;
     uint8_t buffer[0x3000];
     map<uint32_t,vector<uint8_t> >oftToNo;
+public:
     vector<DataListPrint>mdlp;
     MiniMap(string rom,string path);
     ~MiniMap();
-
+    void MakeMiniMapSeriesFolder();
     void MapDataOut();
 
 };

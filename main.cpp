@@ -220,6 +220,7 @@ int main(int argc,char* const argv[]){
     File::makefolder(readFile->FilePath+"ConnectionsSeries");
     unique_ptr<ConnectionsSeries> cs(new ConnectionsSeries(readFile->FileRoute,
                             readFile->FilePath+"ConnectionsSeries\\"));
+    cs->MakeConnectionsSeriesFolder();
     cs->ConnectionsSeriesDataOut();
     readFile->allPrint.insert(readFile->allPrint.end(),
         cs->connectionsDLP.begin(),cs->connectionsDLP.end());
@@ -237,6 +238,7 @@ int main(int argc,char* const argv[]){
     File::makefolder(readFile->FilePath+"MiniMapSeries");
     unique_ptr<MiniMap> mm(new MiniMap(readFile->FileRoute,
                         readFile->FilePath+"MiniMapSeries\\"));
+    mm->MakeMiniMapSeriesFolder();
     mm->MapDataOut();
     readFile->allPrint.insert(readFile->allPrint.end(),
                     mm->mdlp.begin(),mm->mdlp.end());
@@ -258,6 +260,7 @@ int main(int argc,char* const argv[]){
     File::makefolder(readFile->FilePath+"DemoSeries");
     unique_ptr<Demo> demo(new Demo(readFile->FileRoute,
                         readFile->FilePath+"DemoSeries\\"));
+    demo->MakeDemoSeriesFolder();
     demo->DemoDataOut();
     readFile->allPrint.insert(readFile->allPrint.end(),
                     demo->demodlp.begin(),demo->demodlp.end());

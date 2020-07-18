@@ -60,6 +60,11 @@ Demo::Demo(string rom,string path):readRom(rom),curPath(path){
     inf.close();
 }
 Demo::~Demo(){}
+void Demo::MakeDemoSeriesFolder(){
+    File::makefolder(curPath+"State");
+    File::makefolder(curPath+"Keys");
+    File::makefolder(curPath+"KeysSus");
+}
 void Demo::DemoDataOut(){
     string tes=curPath+"DemoGeneralData.asm";
     ifstream inf;
@@ -115,7 +120,7 @@ void Demo::DemoDataOut(){
     //状态数据写出
     for(uint32_t i=0;i<stateOft.size();++i){
         tedlp.explain="DemoStateData"+HeaderSeriesOut::numToHexStr(i,2);
-        tes=curPath+tedlp.explain+".bin";
+        tes=curPath+"State\\"+tedlp.explain+".bin";
         File::MakeFile(ouf,tes,true);
         inf.seekg(stateOft[i],ios::beg);
         inf.read((char*)buffer,0x280);
@@ -126,7 +131,7 @@ void Demo::DemoDataOut(){
         demodlp.push_back(tedlp);
 
         odf<<".align\n"<<tedlp.explain
-        <<":\n\t.import \"DemoSeries\\"
+        <<":\n\t.import \"DemoSeries\\State\\"
         <<tedlp.explain<<".bin\""<<endl;
     }
 
@@ -146,7 +151,7 @@ void Demo::DemoDataOut(){
     //按键数据导出
     for(uint32_t i=0;i<keysOft.size();++i){
         tedlp.explain="DemoKeysData"+HeaderSeriesOut::numToHexStr(i,2);
-        tes=curPath+tedlp.explain+".bin";
+        tes=curPath+"Keys\\"+tedlp.explain+".bin";
 
         File::MakeFile(ouf,tes,true);
         tedlp.len=keysOft[i].keyLen*4;
@@ -159,11 +164,11 @@ void Demo::DemoDataOut(){
         ouf.close();
 
         odf<<".align\n"<<tedlp.explain
-        <<":\n\t.import \"DemoSeries\\"
+        <<":\n\t.import \"DemoSeries\\Keys\\"
         <<tedlp.explain<<".bin\""<<endl;
 
         tedlp.explain="DemoKeysSusData"+HeaderSeriesOut::numToHexStr(i,2);
-        tes=curPath+tedlp.explain+".bin";
+        tes=curPath+"KeysSus\\"+tedlp.explain+".bin";
 
         File::MakeFile(ouf,tes,true);
         tedlp.len=keysOft[i].susLen*2;
@@ -176,7 +181,7 @@ void Demo::DemoDataOut(){
         ouf.close();
 
         odf<<".align\n"<<tedlp.explain
-        <<":\n\t.import \"DemoSeries\\"
+        <<":\n\t.import \"DemoSeries\\KeysSus\\"
         <<tedlp.explain<<".bin\""<<endl;
     }
     inf.close();
