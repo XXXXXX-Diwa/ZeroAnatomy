@@ -201,21 +201,32 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
     Key keys[128];
     for(uint32_t i=0;i<vgofts.size();++i){//样本记录
         inf.seekg(vgofts[i],ios::beg);
-        inf.read((char*)&keys,sizeof(keys));
+        inf.read((char*)keys,sizeof(keys));
         twicebreak=false;
         for(uint8_t j=0;j<128;++j){
             bit8=keys[j].type&0xC7;//去掉18(E7);0x8d984处莫名有20开头,故20也去掉
 //            cout<<hex<<"vg: 0x"<<(int)vgofts[i]<<" type="<<(int)keys[j].type;
 //            cin.get();
+//        if(vgofts[i]==0x8eae8){
+//            cout<<hex<<setfill('0')<<setw(2)<<(int)keys[j].type
+//            <<setw(2)<<(int)keys[j].baseNote
+//            <<setw(2)<<(int)keys[j].sweep
+//            <<setw(2)<<(int)keys[j].pan
+//            <<setw(8)<<(int)keys[j].difoft
+//            <<setw(8)<<(int)keys[j].meydamoft<<endl;
+////            cin.get();
+//        }
+
             switch(bit8){
             case 0:
                 bit32=keys[j].difoft;
                 if((bit32>>25)!=4){
-                    if(keys[j].difoft==0&&keys[j].meydamoft==0){
+                    if(keys[j].type==0&&keys[j].baseNote==0&&
+                       keys[j].sweep==0&&keys[j].pan==0){
+                        twicebreak=true;
                         break;
                     }
-                    twicebreak=true;
-                    break;
+                    continue;
                 }
                 bit32^=0x8000000;
                 info.describe="Sample_"+HeaderSeriesOut::numToHexStr(bit32,7);
@@ -224,11 +235,12 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
                 break;
             case 1:
                 if(keys[j].sweep>0x7F||keys[j].difoft>3||keys[j].pan!=0){
+                    cout<<hex<<vgofts[i]<<endl;
                     twicebreak=true;
                 }
                 break;
             case 2:
-                if(keys[j].sweep>0x7F||keys[j].difoft!=0||keys[j].pan!=0){
+                if(keys[j].difoft>3||keys[j].pan!=0){
                     twicebreak=true;
                 }
                 break;
@@ -326,6 +338,9 @@ Sounds::Sounds(string rom,string path):readRom(rom),curPath(path){
             }
             if(twicebreak){
                 bit32=oftToB[vgofts[i]];
+                if(vgofts[i]==0x8eae8){
+                    cout<<hex<<"vg 0x"<<vgofts[i]<<"的数量为"<<(int)j<<endl;
+                }
                 bit32=bit32>>8<<8;
                 bit32|=j;
                 oftToB[vgofts[i]]=bit32;
@@ -594,6 +609,7 @@ void Sounds::SoundSeriesDataOut(){
                         <<",0x"<<setw(8)<<skeys[i].adsr<<endl;
                         break;
                     default:
+                        cout<<tedlp.explain<<hex<<" "<<(int)i<<" "<<byte4<<endl;
                         DataException::DataError("存在不属于任何的类型的琴键!");
                         break;
                     }
