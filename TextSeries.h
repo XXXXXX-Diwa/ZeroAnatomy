@@ -52,26 +52,28 @@ private:
     uint32_t ldrTextStoryLanguageTableOft[2]={
         0x62D64,0x6F550};
     uint32_t textStoryLanguageTable;
-    vector<vector<uint32_t> >textStoryDataOfts;
+    map<uint32_t,vector<uint32_t> >textStoryDataOfts;
 
     uint32_t ldrTextDescriptionLanguageTableOft=0x6F7D8;
     uint32_t textDescriptionLanguageTable;
-    vector<vector<uint32_t> >textDescriptionDataOfts;
+    map<uint32_t,vector<uint32_t> >textDescriptionDataOfts;
 
     uint32_t ldrTextLocationsLanguageTableOft=0x6F08C;
     uint32_t textLocationsLanguageTable;
-    vector<vector<uint32_t> >textLocationsDataOfts;
+    map<uint32_t,vector<uint32_t> >textLocationsDataOfts;
 
     uint32_t ldrTextMessagesLanguageTableOft[5]={
         0x6F1EC,0x6F398,0x6FB54,0x6FC50,0x6FCF4};
     uint32_t textMessagesLanguageTable;
-    vector<vector<uint32_t> > textMessagesDataOfts;
+    map<uint32_t,vector<uint32_t> > textMessagesDataOfts;
 
     uint32_t ldrTextScreenLanguageTableOft[2]={
         0x6F634,0x79034};
     uint32_t textScreenLanguageTable;
-    vector<vector<uint32_t> >textScreenDataOfts;
+    map<uint32_t,vector<uint32_t> >textScreenDataOfts;
+    static string LanguageStr(int num);
     uint8_t buffer[0x2C000];
+    uint16_t doubuff[0x300];
 public:
     vector<DataListPrint>textdlp;
     Texts(string rom,string path);

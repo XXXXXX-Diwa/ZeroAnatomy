@@ -9,6 +9,7 @@
 #include "MiniMap.h"
 #include "Sounds.h"
 #include "Demo.h"
+#include "TextSeries.h"
 
 bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -90,6 +91,7 @@ void File::MakeMainAsmFile(){
     mf<<".include \"MiniMapSeries\\MiniMapGeneralData.asm\""<<endl;
     mf<<".include \"SoundSeries\\TrackGerenalData.asm\""<<endl;
     mf<<".include \"DemoSeries\\DemoGeneralData.asm\""<<endl;
+    mf<<".include \"TextSeries\\TextGeneralData.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
@@ -137,6 +139,10 @@ void File::MakeMainAsmFile(){
     mf<<".include \"DemoSeries\\DemoDataDef.asm\""<<endl;
     mf<<".include \"DemoSeries\\DemoStateOftTable.asm\""<<endl;
     mf<<".include \"DemoSeries\\DemoKeysOftTable.asm\""<<endl;
+
+    mf<<".include \"TextSeries\\TextDataDef.asm\""<<endl;
+    mf<<".include \"TextSeries\\TextDataTable.asm\""<<endl;
+    mf<<".include \"TextSeries\\TextLanguageTable.asm\""<<endl;
 
     //方便测试(临时尾)
     mf<<".close"<<endl;
@@ -265,6 +271,15 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
                     demo->demodlp.begin(),demo->demodlp.end());
     demo.reset();
+    //Text数据部分
+    File::makefolder(readFile->FilePath+"TextSeries");
+    unique_ptr<Texts> text(new Texts(readFile->FileRoute,
+                        readFile->FilePath+"TextSeries\\"));
+    text->MakeTextSeriesFolder();
+    text->TextDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+                    text->textdlp.begin(),text->textdlp.end());
+    text.reset();
 
     proj.reset();
     readFile->PrintList();
