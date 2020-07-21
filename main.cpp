@@ -93,6 +93,7 @@ void File::MakeMainAsmFile(){
     mf<<".include \"SoundSeries\\TrackGerenalData.asm\""<<endl;
     mf<<".include \"DemoSeries\\DemoGeneralData.asm\""<<endl;
     mf<<".include \"TextSeries\\TextGeneralData.asm\""<<endl;
+    mf<<".include \"EndingImageSeries\\EndingImageGeneral.asm\""<<endl;
     mf<<endl;
     //自定义部分
     mf<<".org ZeroAnatomyFreeDataOffset"<<endl;
@@ -144,6 +145,9 @@ void File::MakeMainAsmFile(){
     mf<<".include \"TextSeries\\TextDataDef.asm\""<<endl;
     mf<<".include \"TextSeries\\TextDataTable.asm\""<<endl;
     mf<<".include \"TextSeries\\TextLanguageTable.asm\""<<endl;
+
+    mf<<".include \"EndingImageSeries\\EndingImageDef.asm\""<<endl;
+    mf<<".include \"EndingImageSeries\\EndingImageTable.asm\""<<endl;
 
     //方便测试(临时尾)
     mf<<".close"<<endl;
