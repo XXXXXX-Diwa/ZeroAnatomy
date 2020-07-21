@@ -10,6 +10,7 @@
 #include "Sounds.h"
 #include "Demo.h"
 #include "TextSeries.h"
+#include "EndingImage.h"
 
 bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -280,6 +281,13 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
                     text->textdlp.begin(),text->textdlp.end());
     text.reset();
+    //EndingImage数据部分
+    File::makefolder(readFile->FilePath+"EndingImageSeries");
+    unique_ptr<EndingImage> emg(new EndingImage(readFile->FileRoute,
+                        readFile->FilePath+"EndingImageSeries\\"));
+    emg->MakeEndingImageFolder();
+    emg->EndingImageOut();
+    emg.reset();
 
     proj.reset();
     readFile->PrintList();
