@@ -291,6 +291,8 @@ int main(int argc,char* const argv[]){
                         readFile->FilePath+"EndingImageSeries\\"));
     emg->MakeEndingImageFolder();
     emg->EndingImageOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+                    emg->eidlp.begin(),emg->eidlp.end());
     emg.reset();
 
     proj.reset();
