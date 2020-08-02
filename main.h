@@ -35,6 +35,8 @@ class File{
     static void MakeFile(ofstream &out,string &s,bool bin);
     File(string s);
     void MakeMainAsmFile();
+    static bool MyCompare(const DataListPrint &D1,const DataListPrint &D2);
+    static bool MyIque(const DataListPrint &D1,const DataListPrint &D2);
     void PrintList();
     ~File();
 };

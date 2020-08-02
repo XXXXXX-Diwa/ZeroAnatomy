@@ -12,11 +12,11 @@
 #include "TextSeries.h"
 #include "EndingImage.h"
 
-bool MyCompare(const DataListPrint &D1,const DataListPrint &D2){
+bool File::MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
 }
 
-bool MyIque(const DataListPrint &D1,const DataListPrint &D2){
+bool File::MyIque(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset==D2.offset;
 }
 
@@ -158,20 +158,43 @@ void File::MakeMainAsmFile(){
 
 void File::PrintList(){
     string tes=FilePath+"DataList.asm";
-    sort(allPrint.begin(),allPrint.end(),MyCompare);
+    sort(allPrint.begin(),allPrint.end(),MyCompare);//排序和去重
     allPrint.erase(unique(allPrint.begin(),allPrint.end(),MyIque),allPrint.end());
-    ofstream ouf(tes,ios::out);
-    if(ouf.fail()){
-        DataException::FileError(tes,0);
-    }
-    vector<DataListPrint>::iterator it;
-    for(it=allPrint.begin();it!=allPrint.end();++it){
+    ofstream ouf;
+    File::MakeFile(ouf,tes,false);
+    vector<DataListPrint>::iterator it=allPrint.begin();
+    for(;it!=allPrint.end();++it){
         ouf<<hex<<setiosflags(ios::uppercase)
         <<setfill('0')<<"0x"<<setw(7)<<(int)it->offset
         <<" - 0x"<<setw(7)<<(int)(it->offset+it->len)
         <<"\t"<<it->explain<<endl;
-
     }
+    ouf.close();
+    ifstream inf;
+    File::OpenFile(inf,FileRoute,true);
+    tes=FilePath+"数据分布.asm";
+    File::MakeFile(ouf,tes,false);
+    it=allPrint.begin();
+    uint32_t oft,oftend;
+    int dis;
+    bool headOfNewDataLabel=true;
+    ouf<<hex<<setiosflags(ios::uppercase)<<setfill('0');
+    while(it!=allPrint.end()){
+        if(headOfNewDataLabel){
+            ouf<<"0x"<<setw(7)<<(int)it->offset<<"\t"<<it->explain<<endl;
+            headOfNewDataLabel=false;
+        }
+        oft=it->offset;
+        oftend=oft+it->len;
+        ++it;
+        dis=it->offset-oftend;
+        if(dis<=4){
+        }else{
+            ouf<<"---0x"<<setw(7)<<(int)oftend<<"\n\n"<<endl;
+            headOfNewDataLabel=true;
+        }
+    }
+    inf.close();
     ouf.close();
 }
 int main(int argc,char* const argv[]){
