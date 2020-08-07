@@ -11,6 +11,12 @@
 #include "Demo.h"
 #include "TextSeries.h"
 #include "EndingImage.h"
+#include <wchar.h>
+#include <windows.h>
+//#include <cstdio>
+//#include <iconv.h>
+//#include <locale>
+//#include <codecvt>
 
 bool File::MyCompare(const DataListPrint &D1,const DataListPrint &D2){
     return D1.offset<D2.offset;
@@ -44,10 +50,87 @@ File::File(string s):FileRoute(s){
         DataException::FileError(s,2);
     }
 }
-File::~File(){
 
+File::~File(){}
+void File::FileToFile(){
+    vector<string>::iterator it=armf.begin();
+    string str,tes;
+    stringstream ss;
+    ifstream inf;
+    ofstream ouf;
+    for(;it!=armf.end();++it){
+        File::OpenFile(inf,*it,true);
+        ss<<inf.rdbuf();
+        str=ss.str();
+        ss.str("");
+        inf.close();
+        AnsiToUtf8(str);
+        tes=*it;
+//        DeleteFile(tes.c_str());
+        File::MakeFile(ouf,*it,true);
+        ouf.write((char*)str.c_str(),str.size());
+        ouf.close();
+    }
+}
+void File::AnsiToUtf8(string &s){
+    if(s.empty()){
+        DataException::DataError("文件0字节?");
+    }
+    auto const wlen=::MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),nullptr,0);
+//    auto wstr=make_unique<wchar_t[]>(wlen+1);
+    wchar_t* wstr=new wchar_t[wlen+1];
+    wstr[wlen]='\0';
+//    MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),wstr.get(),wlen);
+    ::MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),wstr,wlen);
+//    auto const len=WideCharToMultiByte(CP_UTF8,0,wstr.get(),wlen,nullptr,0,NULL,NULL);
+auto const len=::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,nullptr,0,NULL,NULL);
+//    auto str = make_unique<char[]>(len+1);
+    char* str=new char[len+1];
+    str[len]='\0';
+//    WideCharToMultiByte(CP_UTF8,0,wstr.get(),wlen,str.get(),len,NULL,NULL);
+    ::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,str,len,NULL,NULL);
+    s=string(str,len);
+    delete[]str;
+    delete[]wstr;
 }
 
+void File::GetAsmFileName(string path){
+    //文件句柄
+    long   hFile   =   0;
+    //文件信息
+    struct _finddata_t fileinfo;
+    string p=path+"*";
+
+    if((hFile = _findfirst(p.c_str(),&fileinfo)) !=  -1)
+    {
+        do
+        {
+            //如果是目录,迭代之
+            //如果不是,加入列表
+            if((fileinfo.attrib &  _A_SUBDIR))
+            {
+                if(string(fileinfo.name).find_last_of('.') == string::npos){
+                    p=path+string(fileinfo.name)+"\\";
+                    GetAsmFileName( p.c_str() );
+                }
+            }
+            else
+            {
+                p=fileinfo.name;
+
+                size_t pos=p.find_last_of('.');
+                if(pos>0&&pos!=string::npos){
+                    p=p.substr(pos+1);
+                }
+                if(p=="asm"||p=="ASM"){
+                    armf.push_back(p.assign(path).append(fileinfo.name) );
+                }
+            }
+        }while(_findnext(hFile, &fileinfo)  == 0);
+        _findclose(hFile);
+    }
+
+}
 void File::OpenFile(ifstream &in,string &s,bool bin){
     if(bin){
         in.open(s,ios::in|ios::binary);
@@ -317,8 +400,9 @@ int main(int argc,char* const argv[]){
     readFile->allPrint.insert(readFile->allPrint.end(),
                     emg->eidlp.begin(),emg->eidlp.end());
     emg.reset();
-
     proj.reset();
+    readFile->GetAsmFileName(readFile->FilePath);
+    readFile->FileToFile();
     readFile->PrintList();
     readFile.reset();
     return 0;

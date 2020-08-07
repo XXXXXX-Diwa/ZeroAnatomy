@@ -29,6 +29,7 @@ class File{
     string FilePath;    //目录
     string FileName;    //仅文件名
     vector<DataListPrint> allPrint;
+    vector<string> armf;
 
     static void makefolder(string s);
     static void OpenFile(ifstream &in,string &s,bool bin);
@@ -38,6 +39,9 @@ class File{
     static bool MyCompare(const DataListPrint &D1,const DataListPrint &D2);
     static bool MyIque(const DataListPrint &D1,const DataListPrint &D2);
     void PrintList();
+    void AnsiToUtf8(string&);
+    void GetAsmFileName(string path);
+    void FileToFile();
     ~File();
 };
 
