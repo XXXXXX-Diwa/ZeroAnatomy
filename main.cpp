@@ -58,8 +58,15 @@ void File::FileToFile(){
     stringstream ss;
     ifstream inf;
     ofstream ouf;
+    const uint8_t bom[3]={0xEF,0xBB,0xBF};
+    uint8_t cbom[3]={};
     for(;it!=armf.end();++it){
         File::OpenFile(inf,*it,true);
+        inf.read((char*)cbom,3);
+        if(cbom[0]==0xEF&&cbom[1]==0xBB&&cbom[2]==0xBF){
+            inf.close();
+            continue;
+        }
         ss<<inf.rdbuf();
         str=ss.str();
         ss.str("");
@@ -68,6 +75,7 @@ void File::FileToFile(){
         tes=*it;
 //        DeleteFile(tes.c_str());
         File::MakeFile(ouf,*it,true);
+        ouf.write((char*)bom,3);
         ouf.write((char*)str.c_str(),str.size());
         ouf.close();
     }
@@ -83,7 +91,7 @@ void File::AnsiToUtf8(string &s){
 //    MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),wstr.get(),wlen);
     ::MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),wstr,wlen);
 //    auto const len=WideCharToMultiByte(CP_UTF8,0,wstr.get(),wlen,nullptr,0,NULL,NULL);
-auto const len=::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,nullptr,0,NULL,NULL);
+    auto const len=::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,nullptr,0,NULL,NULL);
 //    auto str = make_unique<char[]>(len+1);
     char* str=new char[len+1];
     str[len]='\0';
