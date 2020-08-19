@@ -42,6 +42,8 @@ class File{
     void AnsiToUtf8(string&);
     void GetAsmFileName(string path);
     void FileToFile();
+    uint32_t UTF8Length(const wchar_t *uptr, unsigned int tlen);
+    void UTF8FromUCS2(const wchar_t *uptr, unsigned int tlen, char *putf, unsigned int len);
     ~File();
 };
 

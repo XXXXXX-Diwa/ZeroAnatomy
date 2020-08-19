@@ -13,7 +13,6 @@
 #include "EndingImage.h"
 #include <wchar.h>
 #include <windows.h>
-#include <thread>
 //#include <cstdio>
 //#include <iconv.h>
 //#include <locale>
@@ -68,7 +67,6 @@ void File::FileToFile(){
             inf.close();
             continue;
         }
-        inf.seekg(0,ios::beg);
         ss<<inf.rdbuf();
         str=ss.str();
         ss.str("");
@@ -82,36 +80,6 @@ void File::FileToFile(){
         ouf.close();
     }
 }
-uint32_t File::UTF8Length(const wchar_t *uptr, unsigned int tlen){
-    unsigned int len = 0;
-    for (unsigned int i = 0; i < tlen && uptr[i]; ++i) {
-        unsigned int uch = uptr[i];
-        if (uch < 0x80)
-            ++len;
-        else if (uch < 0x800)
-            len += 2;
-        else
-            len +=3;
-    }
-    return len;
-}
-void File::UTF8FromUCS2(const wchar_t *uptr, unsigned int tlen, char *putf, unsigned int len){
-    int k = 0;
-    for (unsigned int i = 0; i < tlen && uptr[i]; ++i) {
-        unsigned int uch = uptr[i];
-        if (uch < 0x80) {
-            putf[k++] = static_cast<char>(uch);
-        } else if (uch < 0x800) {
-            putf[k++] = static_cast<char>(0xC0 | (uch >> 6));
-            putf[k++] = static_cast<char>(0x80 | (uch & 0x3f));
-        } else {
-            putf[k++] = static_cast<char>(0xE0 | (uch >> 12));
-            putf[k++] = static_cast<char>(0x80 | ((uch >> 6) & 0x3f));
-            putf[k++] = static_cast<char>(0x80 | (uch & 0x3f));
-        }
-    }
-    putf[len] = '\0';
-}
 void File::AnsiToUtf8(string &s){
     if(s.empty()){
         DataException::DataError("文件0字节?");
@@ -123,15 +91,12 @@ void File::AnsiToUtf8(string &s){
 //    MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),wstr.get(),wlen);
     ::MultiByteToWideChar(CP_ACP,0,s.c_str(),s.size(),wstr,wlen);
 //    auto const len=WideCharToMultiByte(CP_UTF8,0,wstr.get(),wlen,nullptr,0,NULL,NULL);
-    auto len=UTF8Length(wstr, wlen);
+    auto const len=::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,nullptr,0,NULL,NULL);
+//    auto str = make_unique<char[]>(len+1);
     char* str=new char[len+1];
-    UTF8FromUCS2(wstr, wlen,str,len);
-//    auto const len=::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,nullptr,0,NULL,NULL);
-////    auto str = make_unique<char[]>(len+1);
-//
-//    str[len]='\0';
-////    WideCharToMultiByte(CP_UTF8,0,wstr.get(),wlen,str.get(),len,NULL,NULL);
-//    ::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,str,len,NULL,NULL);
+    str[len]='\0';
+//    WideCharToMultiByte(CP_UTF8,0,wstr.get(),wlen,str.get(),len,NULL,NULL);
+    ::WideCharToMultiByte(CP_UTF8,0,wstr,wlen,str,len,NULL,NULL);
     s=string(str,len);
     delete[]str;
     delete[]wstr;
@@ -323,68 +288,10 @@ void File::PrintList(){
     inf.close();
     ouf.close();
 }
-
-void threadone(shared_ptr<File> readFile,shared_ptr<ProjInfo> proj){
-    //head数据部分
-        unique_ptr<HeaderSeriesOut> hso(new HeaderSeriesOut(readFile->FileRoute,
-                            readFile->FilePath+"HeaderSeries\\",proj->roomsPerArea));
-        hso->MakeHeaderSeriesFolders();//创建Header数据所需的文件夹
-        hso->HeadAllDataOut();     //Header数据导出
-        readFile->allPrint.insert(readFile->allPrint.end(),//Head系列的信息数据交由主存储
-            hso->headSeriesDLP.begin(),hso->headSeriesDLP.end());
-        hso.reset();//header系列数据释放
-        //Tileset数据部分
-        File::makefolder(readFile->FilePath+"TileSetSeries");//创建TileSet数据文件夹
-        unique_ptr<TileSetSeriesOut> tsso(new TileSetSeriesOut(readFile->FileRoute,
-                                            readFile->FilePath+"TileSetSeries\\"));
-        tsso->MakeTileSetSeriesFolders();//创建Tileset数据所需的文件夹
-        tsso->TileSetAllDataOut();      //TileSet数据导出
-        readFile->allPrint.insert(readFile->allPrint.end(),
-            tsso->tileSetSeriesDLP.begin(),tsso->tileSetSeriesDLP.end());
-        tsso.reset();
-        //Animated数据部分
-        File::makefolder(readFile->FilePath+"AnimatedSeries");//创建Animated数据文件夹
-        unique_ptr<AnimatedOut> ao(new AnimatedOut(readFile->FileRoute,
-                        readFile->FilePath+"AnimatedSeries\\",proj->numOfAnimaTilesets,
-                            proj->numOfAnimaGfx,proj->numOfAnimaPalettes));
-        ao->MakeAnimatedOutFolders();
-        ao->AnimatedAllDataOut();
-        readFile->allPrint.insert(readFile->allPrint.end(),
-            ao->animatedDLP.begin(),ao->animatedDLP.end());
-        ao.reset();
-        //Sprite数据部分
-        File::makefolder(readFile->FilePath+"SpriteSeries");//创建Sprite数据文件夹
-        unique_ptr<SpriteSeries> ss(new SpriteSeries(readFile->FileRoute,
-                                readFile->FilePath+"SpriteSeries\\",proj->numOfSpritesets));
-        ss->MakeSpriteSeriesFolders();
-        ss->SpriteSeriesDataOut();
-        readFile->allPrint.insert(readFile->allPrint.end(),
-            ss->spriteDLP.begin(),ss->spriteDLP.end());
-        ss.reset();
-        //Connections数据部分
-        File::makefolder(readFile->FilePath+"ConnectionsSeries");
-        unique_ptr<ConnectionsSeries> cs(new ConnectionsSeries(readFile->FileRoute,
-                                readFile->FilePath+"ConnectionsSeries\\"));
-        cs->MakeConnectionsSeriesFolder();
-        cs->ConnectionsSeriesDataOut();
-        readFile->allPrint.insert(readFile->allPrint.end(),
-            cs->connectionsDLP.begin(),cs->connectionsDLP.end());
-        cs.reset();
-        //Scroll数据部分
-        File::makefolder(readFile->FilePath+"ScrollSeries");
-        unique_ptr<Scrolls> so(new Scrolls(readFile->FileRoute,
-                readFile->FilePath+"ScrollSeries\\",proj->roomsPerArea));
-        so->MakeScrollsFolder();
-        so->ScrollsDataOut();
-        readFile->allPrint.insert(readFile->allPrint.end(),
-            so->scrollsDLP.begin(),so->scrollsDLP.end());
-        so.reset();
-}
-
 int main(int argc,char* const argv[]){
     ios::sync_with_stdio(false);
     //文件信息部分
-    shared_ptr<File>readFile;
+    unique_ptr<File>readFile;
     if(argc==1){
         DataException::FileError("",2);
     }else{
@@ -394,13 +301,64 @@ int main(int argc,char* const argv[]){
     RunTimes *durt=RunTimes::SharedRunTime();
 
     //Proj数据部分
-    shared_ptr<ProjInfo>proj(new ProjInfo(readFile->FileRoute));
+    unique_ptr<ProjInfo>proj(new ProjInfo(readFile->FileRoute));
 
     File::makefolder(readFile->FilePath+"HeaderSeries");//创建Header数据文件夹
     readFile->MakeMainAsmFile();//制造和打印主文件
-
-    std::thread t(threadone,readFile,proj);
-    t.detach();
+    //head数据部分
+    unique_ptr<HeaderSeriesOut> hso(new HeaderSeriesOut(readFile->FileRoute,
+                        readFile->FilePath+"HeaderSeries\\",proj->roomsPerArea));
+    hso->MakeHeaderSeriesFolders();//创建Header数据所需的文件夹
+    hso->HeadAllDataOut();     //Header数据导出
+    readFile->allPrint.insert(readFile->allPrint.end(),//Head系列的信息数据交由主存储
+        hso->headSeriesDLP.begin(),hso->headSeriesDLP.end());
+    hso.reset();//header系列数据释放
+    //Tileset数据部分
+    File::makefolder(readFile->FilePath+"TileSetSeries");//创建TileSet数据文件夹
+    unique_ptr<TileSetSeriesOut> tsso(new TileSetSeriesOut(readFile->FileRoute,
+                                        readFile->FilePath+"TileSetSeries\\"));
+    tsso->MakeTileSetSeriesFolders();//创建Tileset数据所需的文件夹
+    tsso->TileSetAllDataOut();      //TileSet数据导出
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        tsso->tileSetSeriesDLP.begin(),tsso->tileSetSeriesDLP.end());
+    tsso.reset();
+    //Animated数据部分
+    File::makefolder(readFile->FilePath+"AnimatedSeries");//创建Animated数据文件夹
+    unique_ptr<AnimatedOut> ao(new AnimatedOut(readFile->FileRoute,
+                    readFile->FilePath+"AnimatedSeries\\",proj->numOfAnimaTilesets,
+                        proj->numOfAnimaGfx,proj->numOfAnimaPalettes));
+    ao->MakeAnimatedOutFolders();
+    ao->AnimatedAllDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        ao->animatedDLP.begin(),ao->animatedDLP.end());
+    ao.reset();
+    //Sprite数据部分
+    File::makefolder(readFile->FilePath+"SpriteSeries");//创建Sprite数据文件夹
+    unique_ptr<SpriteSeries> ss(new SpriteSeries(readFile->FileRoute,
+                            readFile->FilePath+"SpriteSeries\\",proj->numOfSpritesets));
+    ss->MakeSpriteSeriesFolders();
+    ss->SpriteSeriesDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        ss->spriteDLP.begin(),ss->spriteDLP.end());
+    ss.reset();
+    //Connections数据部分
+    File::makefolder(readFile->FilePath+"ConnectionsSeries");
+    unique_ptr<ConnectionsSeries> cs(new ConnectionsSeries(readFile->FileRoute,
+                            readFile->FilePath+"ConnectionsSeries\\"));
+    cs->MakeConnectionsSeriesFolder();
+    cs->ConnectionsSeriesDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        cs->connectionsDLP.begin(),cs->connectionsDLP.end());
+    cs.reset();
+    //Scroll数据部分
+    File::makefolder(readFile->FilePath+"ScrollSeries");
+    unique_ptr<Scrolls> so(new Scrolls(readFile->FileRoute,
+            readFile->FilePath+"ScrollSeries\\",proj->roomsPerArea));
+    so->MakeScrollsFolder();
+    so->ScrollsDataOut();
+    readFile->allPrint.insert(readFile->allPrint.end(),
+        so->scrollsDLP.begin(),so->scrollsDLP.end());
+    so.reset();
     //MiniMap数据部分
     File::makefolder(readFile->FilePath+"MiniMapSeries");
     unique_ptr<MiniMap> mm(new MiniMap(readFile->FileRoute,
